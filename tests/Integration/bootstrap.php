@@ -41,3 +41,6 @@ $GLOBALS['wp_filter']['option_active_plugins'][PHP_INT_MAX][] = [
 global $wpdb, $wp_version, $wp_filter, $wp_actions, $wp_current_filter, $table_prefix;
 
 require_once $wpLoad;
+
+// Some tests provoke database errors on purpose; keep WordPress from printing them.
+$GLOBALS['wpdb']->hide_errors();

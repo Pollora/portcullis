@@ -176,8 +176,19 @@ every request and never be locked out.
 #### Storage
 
 Counters live in a dedicated table, `{base_prefix}portcullis_attempts`: one
-compact row per address or account, found by primary key. It is created the
-first time it is needed, or explicitly with `wp portcullis install`.
+compact row per address or account, found by primary key. No command is needed
+to create it:
+
+- it is installed on the first login attempt, or as soon as an administrator
+  opens any administration screen, whichever comes first;
+- if it cannot be created — typically a database user without the `CREATE`
+  privilege — an administration notice says so, with the database error, and the
+  installation is retried every 15 minutes rather than on every request;
+- if the table disappears while its version is still recorded — a partial
+  restore, a table dropped by hand — it is installed again on the next request.
+
+`wp portcullis install` does the same on demand, without waiting, which suits
+deployment scripts.
 
 Transients were ruled out: without a persistent object cache they land in
 `wp_options`, two rows per key, with no index a purge could use — an attack would

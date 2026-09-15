@@ -262,12 +262,27 @@ final class WpdbAttemptStore implements AttemptStorePort
      * missing table look like "no lockout, no failure", which silently disables
      * the protection; the guard catches the exception and decides what to do.
      *
+     * MySQL and MariaDB both word a missing table as "Table '…' doesn't exist",
+     * whatever the server locale, which is what the self-healing below keys on.
+     *
      * @throws RuntimeException When the last query failed.
      */
     private function failOnError(): void
     {
-        if ($this->wpdb->last_error !== '') {
-            throw new RuntimeException('[portcullis] '.$this->wpdb->last_error);
+        $error = $this->wpdb->last_error;
+
+        if ($error === '') {
+            return;
         }
+
+        if (str_contains($error, "doesn't exist")) {
+            // The table is gone although its version is recorded. Forget the
+            // version so that the next request installs it again, instead of
+            // failing until someone notices.
+            $this->schema->forget();
+            $this->ready = false;
+        }
+
+        throw new RuntimeException('[portcullis] '.$error);
     }
 }

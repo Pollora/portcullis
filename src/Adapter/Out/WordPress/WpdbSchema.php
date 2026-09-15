@@ -39,6 +39,16 @@ final class WpdbSchema
     public const TABLE = 'portcullis_attempts';
 
     /**
+     * Seconds a failed installation is remembered before it is attempted again.
+     *
+     * Without it, a database user that may not create tables would run
+     * `dbDelta()` on every login attempt and every administration screen. Long
+     * enough to spare the database, short enough that fixing the permission
+     * does not mean waiting; `wp portcullis install` never waits.
+     */
+    public const RETRY_DELAY = 900;
+
+    /**
      * @param  wpdb  $wpdb  Database connection.
      * @param  string  $name  Table name, without the database prefix.
      */
@@ -74,7 +84,10 @@ final class WpdbSchema
     /**
      * Creates or upgrades the table when needed.
      *
-     * @throws RuntimeException When the table still does not exist afterwards.
+     * A failure less than {@see self::RETRY_DELAY} seconds old is reported again
+     * without a new attempt.
+     *
+     * @throws RuntimeException When the table cannot be created.
      */
     public function ensure(): void
     {
@@ -82,11 +95,21 @@ final class WpdbSchema
             return;
         }
 
+        $error = $this->lastInstallError();
+
+        if ($error !== null) {
+            throw new RuntimeException($error);
+        }
+
         $this->install();
     }
 
     /**
      * Creates or upgrades the table, unconditionally.
+     *
+     * The outcome is remembered: a failure for {@see self::RETRY_DELAY} seconds,
+     * so that {@see self::ensure()} and the administration notice can report it
+     * without trying again; a success clears it.
      *
      * @throws RuntimeException When the table does not exist afterwards — typically
      *                          because the database user may not create tables.
@@ -100,17 +123,50 @@ final class WpdbSchema
         dbDelta($this->createTableStatement());
 
         if (! $this->exists()) {
-            throw new RuntimeException(sprintf(
+            $error = sprintf(
                 'The table %s could not be created: %s',
                 $this->table(),
                 $this->wpdb->last_error !== '' ? $this->wpdb->last_error : 'check that the database user may create tables.'
-            ));
+            );
+
+            set_site_transient($this->errorTransient(), $error, self::RETRY_DELAY);
+            error_log('[portcullis] '.$error);
+
+            throw new RuntimeException($error);
         }
 
         if (is_multisite()) {
             update_network_option(null, $this->versionOption(), self::VERSION);
         } else {
             update_option($this->versionOption(), self::VERSION, true);
+        }
+
+        delete_site_transient($this->errorTransient());
+    }
+
+    /**
+     * The error of an installation that failed less than {@see self::RETRY_DELAY} seconds ago.
+     */
+    public function lastInstallError(): ?string
+    {
+        $error = get_site_transient($this->errorTransient());
+
+        return is_string($error) && $error !== '' ? $error : null;
+    }
+
+    /**
+     * Forgets the installed version, so that the next {@see self::ensure()} installs again.
+     *
+     * Called when the table turns out to be missing although its version is
+     * recorded — a partial restore, a table dropped by hand. Without it, every
+     * query would fail until someone ran `wp portcullis install`.
+     */
+    public function forget(): void
+    {
+        if (is_multisite()) {
+            delete_network_option(null, $this->versionOption());
+        } else {
+            delete_option($this->versionOption());
         }
     }
 
@@ -168,5 +224,13 @@ final class WpdbSchema
     private function versionOption(): string
     {
         return $this->name === self::TABLE ? self::VERSION_OPTION : $this->name.'_schema_version';
+    }
+
+    /**
+     * Site transient the last installation error is kept in.
+     */
+    private function errorTransient(): string
+    {
+        return $this->versionOption().'_error';
     }
 }

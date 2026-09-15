@@ -14,6 +14,7 @@ use Pollora\Portcullis\Adapter\In\WordPress\LoginThrottleGuard;
 use Pollora\Portcullis\Adapter\In\WordPress\LoginUrlRewriter;
 use Pollora\Portcullis\Adapter\In\WordPress\SlugCollisionNotice;
 use Pollora\Portcullis\Adapter\In\WordPress\StockAliasRouter;
+use Pollora\Portcullis\Adapter\In\WordPress\StorageHealthNotice;
 use Pollora\Portcullis\Adapter\Out\Pollora\PolloraHookRegistrar;
 use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentFeatureToggle;
 use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentSlugProvider;
@@ -80,7 +81,7 @@ final class Portcullis
     /**
      * Package version, exposed for host applications that report their stack.
      */
-    public const VERSION = '2.0.0';
+    public const VERSION = '2.0.1';
 
     /**
      * Guards against registering the hooks twice.
@@ -238,6 +239,10 @@ final class Portcullis
         ))->register();
 
         $purge->register();
+
+        if ($schema !== null) {
+            (new StorageHealthNotice($schema, $registrar))->register();
+        }
 
         if ($settings->genericErrors()) {
             (new GenericLoginErrors($registrar))->register();

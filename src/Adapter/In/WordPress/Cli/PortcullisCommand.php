@@ -333,6 +333,12 @@ final class PortcullisCommand
 
         if ($this->schema !== null) {
             WP_CLI::line('Storage:      table '.$this->schema->table().($this->schema->isUpToDate() ? '' : ' (not installed yet)'));
+
+            $error = $this->schema->lastInstallError();
+
+            if ($error !== null) {
+                WP_CLI::warning('Last installation attempt failed: '.$error);
+            }
         }
     }
 
