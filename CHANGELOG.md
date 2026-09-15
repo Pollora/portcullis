@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 — unreleased
+## 2.0.0 — 2026-09-15
 
 The package is renamed `pollora/portcullis` and gains brute-force protection.
 
