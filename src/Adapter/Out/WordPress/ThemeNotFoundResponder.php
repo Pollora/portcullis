@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\Out\WordPress;
+namespace Pollora\Portcullis\Adapter\Out\WordPress;
 
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
-use Pollora\HiddenLogin\Port\Out\NotFoundResponderPort;
-use Pollora\HiddenLogin\Port\Out\RequestContextPort;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Port\Out\NotFoundResponderPort;
+use Pollora\Portcullis\Port\Out\RequestContextPort;
 
 /**
  * Answers blocked requests with the theme's own 404 page.
@@ -85,7 +85,8 @@ final class ThemeNotFoundResponder implements NotFoundResponderPort
          *
          * @param  bool  $render  Whether to render the theme template. Default `true`.
          */
-        if ($this->hooks->applyFilters('hidden_login/render_theme_404', true)) {
+        // The 1.x name is applied first so that the new name gets the last word.
+        if ($this->hooks->applyFilters('portcullis/render_theme_404', $this->hooks->applyFilters('hidden_login/render_theme_404', true))) {
             $this->renderThemeTemplate();
         }
 

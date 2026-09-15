@@ -1,11 +1,13 @@
 {
-    "name": "pollora/hidden-login",
-    "description": "Serve the WordPress login screen from a secret URL and return a 404 on wp-login.php and wp-admin",
+    "name": "pollora/portcullis",
+    "description": "Secures the WordPress login: serves it from a secret URL, answers wp-login.php and wp-admin with a 404, and locks out brute-force attempts",
     "type": "library",
     "keywords": [
         "wordpress",
         "security",
         "login",
+        "brute-force",
+        "limit-login-attempts",
         "hardening",
         "bedrock"
     ],
@@ -19,6 +21,9 @@
     "require": {
         "php": ">=8.1"
     },
+    "conflict": {
+        "pollora/hidden-login": "*"
+    },
     "require-dev": {
         "laravel/pint": "^1.18",
         "pestphp/pest": "^2.34",
@@ -26,7 +31,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Pollora\\HiddenLogin\\": "src/"
+            "Pollora\\Portcullis\\": "src/",
+            "Pollora\\HiddenLogin\\": "compat/"
         },
         "files": [
             "bootstrap.php"
@@ -34,7 +40,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Pollora\\HiddenLogin\\Tests\\": "tests/"
+            "Pollora\\Portcullis\\Tests\\": "tests/"
         }
     },
     "config": {
@@ -51,8 +57,8 @@
         ],
         "test:unit": "pest --testsuite=Unit",
         "test:coverage": "pest --coverage",
-        "phpstan": "phpstan analyse src tests --level=5",
-        "phpstan:ci": "phpstan analyse src tests --level=5 --no-progress",
+        "phpstan": "phpstan analyse src compat tests --level=5",
+        "phpstan:ci": "phpstan analyse src compat tests --level=5 --no-progress",
         "lint": "pint",
         "lint:check": "pint --test"
     },

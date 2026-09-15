@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\In\WordPress;
+namespace Pollora\Portcullis\Adapter\In\WordPress;
 
-use Pollora\HiddenLogin\Application\Service\GuardDefaultEndpoints;
-use Pollora\HiddenLogin\Application\Service\MatchHiddenLoginRequest;
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
-use Pollora\HiddenLogin\Port\Out\LoginScreenRendererPort;
-use Pollora\HiddenLogin\Port\Out\NotFoundResponderPort;
-use Pollora\HiddenLogin\Port\Out\RequestContextPort;
+use Pollora\Portcullis\Application\Service\GuardDefaultEndpoints;
+use Pollora\Portcullis\Application\Service\MatchHiddenLoginRequest;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Port\Out\LoginScreenRendererPort;
+use Pollora\Portcullis\Port\Out\NotFoundResponderPort;
+use Pollora\Portcullis\Port\Out\RequestContextPort;
 
 /**
  * Routes the request: secret slug to the login screen, stock endpoints to a 404.
@@ -145,7 +145,12 @@ final class HiddenLoginRouter
          *
          * @param  list<string>  $actions  Action names, as read from `$_REQUEST['action']`.
          */
-        $actions = $this->hooks->applyFilters('hidden_login/allowed_default_actions', []);
+        $actions = $this->hooks->applyFilters(
+            'portcullis/allowed_default_actions',
+            // 1.x name, applied first so that existing callbacks keep working and
+            // the new name gets the last word.
+            $this->hooks->applyFilters('hidden_login/allowed_default_actions', []),
+        );
 
         return is_array($actions) ? array_values(array_filter($actions, 'is_string')) : [];
     }

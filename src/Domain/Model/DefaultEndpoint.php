@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Domain\Model;
+namespace Pollora\Portcullis\Domain\Model;
 
 /**
  * The stock WordPress entry points that this package hides.

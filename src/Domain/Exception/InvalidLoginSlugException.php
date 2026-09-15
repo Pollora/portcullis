@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Domain\Exception;
+namespace Pollora\Portcullis\Domain\Exception;
 
 use InvalidArgumentException;
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
 
 /**
  * Thrown when the configured login slug cannot be turned into a valid

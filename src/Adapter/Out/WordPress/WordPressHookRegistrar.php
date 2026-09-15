@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\Out\WordPress;
+namespace Pollora\Portcullis\Adapter\Out\WordPress;
 
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
 
 /**
  * Hook registrar backed by the WordPress plugin API.

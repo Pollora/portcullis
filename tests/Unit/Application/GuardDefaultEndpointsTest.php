@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Pollora\HiddenLogin\Application\Service\GuardDefaultEndpoints;
-use Pollora\HiddenLogin\Domain\Model\DefaultEndpoint;
+use Pollora\Portcullis\Application\Service\GuardDefaultEndpoints;
+use Pollora\Portcullis\Domain\Model\DefaultEndpoint;
 
 beforeEach(function (): void {
     $this->guard = new GuardDefaultEndpoints;

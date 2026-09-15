@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Port\Out;
+namespace Pollora\Portcullis\Port\Out;
 
 /**
  * Registers, removes and applies hooks.

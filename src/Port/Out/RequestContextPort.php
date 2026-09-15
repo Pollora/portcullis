@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Port\Out;
+namespace Pollora\Portcullis\Port\Out;
 
-use Pollora\HiddenLogin\Domain\Model\DefaultEndpoint;
+use Pollora\Portcullis\Domain\Model\DefaultEndpoint;
 
 /**
  * Read-only view of the current request, as seen from the host runtime.

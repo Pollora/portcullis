@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Application\Service;
+namespace Pollora\Portcullis\Application\Service;
 
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
-use Pollora\HiddenLogin\Domain\Model\RequestPath;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Domain\Model\RequestPath;
 
 /**
  * Decides whether the incoming request targets the secret login URL.

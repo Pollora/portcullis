@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Pollora\HiddenLogin\Domain\Model\FeatureState;
+use Pollora\Portcullis\Domain\Model\FeatureState;
 
 it('is enabled when nothing is configured', function (bool|string|null $value): void {
     // The package registers itself through Composer, so an installation that

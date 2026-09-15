@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Pollora\HiddenLogin\Application\Service\ResolveLoginSlug;
-use Pollora\HiddenLogin\Domain\Exception\InvalidLoginSlugException;
-use Pollora\HiddenLogin\Tests\Support\InMemorySlugProvider;
+use Pollora\Portcullis\Application\Service\ResolveLoginSlug;
+use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
+use Pollora\Portcullis\Tests\Support\InMemorySlugProvider;
 
 it('returns null when nothing is configured', function (?string $raw): void {
     expect((new ResolveLoginSlug(new InMemorySlugProvider($raw)))->resolve())->toBeNull();

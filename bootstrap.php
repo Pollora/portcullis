@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-use Pollora\HiddenLogin\Bootstrap;
+use Pollora\Portcullis\Bootstrap;
 
 /*
  * Loaded by Composer through `autoload.files`, so that requiring the package is
@@ -9,7 +9,7 @@ use Pollora\HiddenLogin\Bootstrap;
  * to actually register anything is taken later, once the host's configuration
  * constants exist.
  *
- * @see \Pollora\HiddenLogin\Bootstrap::schedule()
+ * @see \Pollora\Portcullis\Bootstrap::schedule()
  */
 
 Bootstrap::schedule();

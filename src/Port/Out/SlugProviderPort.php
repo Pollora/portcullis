@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Port\Out;
+namespace Pollora\Portcullis\Port\Out;
 
 /**
  * Supplies the raw, unvalidated login slug from wherever the host application
@@ -12,7 +12,7 @@ namespace Pollora\HiddenLogin\Port\Out;
  * keeps the secret out of the database and therefore out of production dumps
  * restored on staging or local environments. Hosts that need a settings screen
  * can implement this port against an option instead and inject it into
- * `HiddenLogin::boot()`.
+ * `Portcullis::boot()`.
  */
 interface SlugProviderPort
 {

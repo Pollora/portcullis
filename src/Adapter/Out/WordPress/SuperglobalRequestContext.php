@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\Out\WordPress;
+namespace Pollora\Portcullis\Adapter\Out\WordPress;
 
-use Pollora\HiddenLogin\Domain\Model\DefaultEndpoint;
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
-use Pollora\HiddenLogin\Port\Out\RequestContextPort;
+use Pollora\Portcullis\Domain\Model\DefaultEndpoint;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Port\Out\RequestContextPort;
 
 /**
  * Reads the current request from PHP superglobals and WordPress globals.
@@ -137,7 +137,11 @@ final class SuperglobalRequestContext implements RequestContextPort
          *
          * @param  list<string>  $scripts  Script file names, relative to `wp-admin/`.
          */
-        $scripts = $this->hooks->applyFilters('hidden_login/public_admin_scripts', self::PUBLIC_ADMIN_SCRIPTS);
+        $scripts = $this->hooks->applyFilters(
+            'portcullis/public_admin_scripts',
+            // 1.x name, applied first so that the new name gets the last word.
+            $this->hooks->applyFilters('hidden_login/public_admin_scripts', self::PUBLIC_ADMIN_SCRIPTS),
+        );
 
         return is_array($scripts) ? array_values(array_filter($scripts, 'is_string')) : self::PUBLIC_ADMIN_SCRIPTS;
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Domain\Model;
+namespace Pollora\Portcullis\Domain\Model;
 
 /**
  * Whether the package is allowed to touch the request at all.
@@ -43,7 +43,7 @@ enum FeatureState
      * Reads the state from a raw configuration value.
      *
      * The value arrives in three shapes depending on how the host declares it.
-     * Bedrock's `Config::define('HIDDEN_LOGIN_ENABLED', env('HIDDEN_LOGIN_ENABLED'))`
+     * Bedrock's `Config::define('PORTCULLIS_ENABLED', env('PORTCULLIS_ENABLED'))`
      * yields a real boolean, because `oscarotero/env` converts `"false"` on the
      * way in; a plain `getenv()` yields a string; an absent variable yields
      * `null`.

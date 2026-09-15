@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Application\Service;
+namespace Pollora\Portcullis\Application\Service;
 
-use Pollora\HiddenLogin\Domain\Model\DefaultEndpoint;
-use Pollora\HiddenLogin\Domain\Model\RequestPath;
-use Pollora\HiddenLogin\Port\Out\RequestContextPort;
+use Pollora\Portcullis\Domain\Model\DefaultEndpoint;
+use Pollora\Portcullis\Domain\Model\RequestPath;
+use Pollora\Portcullis\Port\Out\RequestContextPort;
 
 /**
  * Recognises the convenience URLs WordPress maps onto its stock entry points.

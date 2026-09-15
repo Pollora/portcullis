@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Tests\Support;
+namespace Pollora\Portcullis\Tests\Support;
 
-use Pollora\HiddenLogin\Port\Out\SlugProviderPort;
+use Pollora\Portcullis\Port\Out\SlugProviderPort;
 
 /**
  * Test double returning a slug held in memory.

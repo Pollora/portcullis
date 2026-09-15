@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin;
+namespace Pollora\Portcullis;
 
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
 
 /**
  * Self-registration entry point, invoked by Composer's `autoload.files`.
@@ -53,12 +53,12 @@ final class Bootstrap
         }
 
         if (function_exists('did_action') && did_action(self::BOOT_HOOK)) {
-            HiddenLogin::boot();
+            Portcullis::boot();
 
             return;
         }
 
-        add_action(self::BOOT_HOOK, [HiddenLogin::class, 'boot'], 0, 0);
+        add_action(self::BOOT_HOOK, [Portcullis::class, 'boot'], 0, 0);
     }
 
     /**
@@ -77,7 +77,7 @@ final class Bootstrap
         }
 
         $GLOBALS['wp_filter'][self::BOOT_HOOK][0][] = [
-            'function' => [HiddenLogin::class, 'boot'],
+            'function' => [Portcullis::class, 'boot'],
             'accepted_args' => 0,
         ];
     }

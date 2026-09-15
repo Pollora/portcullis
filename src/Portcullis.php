@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin;
+namespace Pollora\Portcullis;
 
-use Pollora\HiddenLogin\Adapter\In\WordPress\Cli\HiddenLoginCommand;
-use Pollora\HiddenLogin\Adapter\In\WordPress\HiddenLoginRouter;
-use Pollora\HiddenLogin\Adapter\In\WordPress\LoginUrlRewriter;
-use Pollora\HiddenLogin\Adapter\In\WordPress\SlugCollisionNotice;
-use Pollora\HiddenLogin\Adapter\In\WordPress\StockAliasRouter;
-use Pollora\HiddenLogin\Adapter\Out\Pollora\PolloraHookRegistrar;
-use Pollora\HiddenLogin\Adapter\Out\WordPress\EnvironmentFeatureToggle;
-use Pollora\HiddenLogin\Adapter\Out\WordPress\EnvironmentSlugProvider;
-use Pollora\HiddenLogin\Adapter\Out\WordPress\SuperglobalRequestContext;
-use Pollora\HiddenLogin\Adapter\Out\WordPress\ThemeNotFoundResponder;
-use Pollora\HiddenLogin\Adapter\Out\WordPress\WordPressHookRegistrar;
-use Pollora\HiddenLogin\Adapter\Out\WordPress\WpLoginScreenRenderer;
-use Pollora\HiddenLogin\Application\Service\ClassifyStockAlias;
-use Pollora\HiddenLogin\Application\Service\GuardDefaultEndpoints;
-use Pollora\HiddenLogin\Application\Service\MatchHiddenLoginRequest;
-use Pollora\HiddenLogin\Application\Service\ResolveLoginSlug;
-use Pollora\HiddenLogin\Application\Service\RewriteLoginUrl;
-use Pollora\HiddenLogin\Domain\Exception\InvalidLoginSlugException;
-use Pollora\HiddenLogin\Port\Out\FeatureTogglePort;
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
-use Pollora\HiddenLogin\Port\Out\SlugProviderPort;
+use Pollora\Portcullis\Adapter\In\WordPress\Cli\HiddenLoginCommand;
+use Pollora\Portcullis\Adapter\In\WordPress\HiddenLoginRouter;
+use Pollora\Portcullis\Adapter\In\WordPress\LoginUrlRewriter;
+use Pollora\Portcullis\Adapter\In\WordPress\SlugCollisionNotice;
+use Pollora\Portcullis\Adapter\In\WordPress\StockAliasRouter;
+use Pollora\Portcullis\Adapter\Out\Pollora\PolloraHookRegistrar;
+use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentFeatureToggle;
+use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentSlugProvider;
+use Pollora\Portcullis\Adapter\Out\WordPress\SuperglobalRequestContext;
+use Pollora\Portcullis\Adapter\Out\WordPress\ThemeNotFoundResponder;
+use Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar;
+use Pollora\Portcullis\Adapter\Out\WordPress\WpLoginScreenRenderer;
+use Pollora\Portcullis\Application\Service\ClassifyStockAlias;
+use Pollora\Portcullis\Application\Service\GuardDefaultEndpoints;
+use Pollora\Portcullis\Application\Service\MatchHiddenLoginRequest;
+use Pollora\Portcullis\Application\Service\ResolveLoginSlug;
+use Pollora\Portcullis\Application\Service\RewriteLoginUrl;
+use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
+use Pollora\Portcullis\Port\Out\FeatureTogglePort;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Port\Out\SlugProviderPort;
 
 /**
  * Composition root: wires the adapters to the use cases and registers the hooks.
@@ -35,24 +35,24 @@ use Pollora\HiddenLogin\Port\Out\SlugProviderPort;
  * to inject their own adapters:
  *
  * ```php
- * \Pollora\HiddenLogin\HiddenLogin::boot(new MyOptionSlugProvider());
+ * \Pollora\Portcullis\Portcullis::boot(new MyOptionSlugProvider());
  * ```
  *
  * Two independent conditions keep the package out of the way:
  *
- * - `HIDDEN_LOGIN_ENABLED` set to a falsy value switches it off entirely.
+ * - `PORTCULLIS_ENABLED` set to a falsy value switches it off entirely.
  *   Enabled by default: an installation that pulled the package in has opted in.
  * - No slug configured leaves it dormant. That is a deliberate fail-open — a
  *   freshly provisioned environment, a restored dump or a missing `.env` entry
  *   must leave a site usable rather than lock everybody out of an installation
  *   nobody can reach a terminal on.
  */
-final class HiddenLogin
+final class Portcullis
 {
     /**
      * Package version, exposed for host applications that report their stack.
      */
-    public const VERSION = '1.0.2';
+    public const VERSION = '2.0.0';
 
     /**
      * Guards against registering the hooks twice.
@@ -68,7 +68,7 @@ final class HiddenLogin
      *
      * @param  SlugProviderPort|null  $slugProvider  Where to read the slug from. Defaults to
      *                                               {@see EnvironmentSlugProvider}, which reads the
-     *                                               `HIDDEN_LOGIN_SLUG` constant then the environment.
+     *                                               `PORTCULLIS_LOGIN_SLUG` constant then the environment.
      * @param  FeatureTogglePort|null  $toggle  Where to read the kill switch from. Defaults to
      *                                          {@see EnvironmentFeatureToggle}.
      * @param  HookRegistrarPort|null  $hooks  Hook system to register against. Defaults to
@@ -153,7 +153,7 @@ final class HiddenLogin
         InvalidLoginSlugException $exception,
         HookRegistrarPort $hooks,
     ): void {
-        error_log('[hidden-login] '.$exception->getMessage());
+        error_log('[portcullis] '.$exception->getMessage());
 
         $hooks->addAction('admin_notices', static function () use ($exception): void {
             if (! current_user_can('manage_options')) {
@@ -161,7 +161,7 @@ final class HiddenLogin
             }
 
             printf(
-                '<div class="notice notice-error"><p><strong>hidden-login</strong> — %s</p></div>',
+                '<div class="notice notice-error"><p><strong>Portcullis</strong> — %s</p></div>',
                 esc_html($exception->getMessage())
             );
         }, 10, 0);

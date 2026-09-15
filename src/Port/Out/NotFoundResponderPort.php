@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Port\Out;
+namespace Pollora\Portcullis\Port\Out;
 
 /**
  * Answers a request with a 404, as if the requested endpoint did not exist.

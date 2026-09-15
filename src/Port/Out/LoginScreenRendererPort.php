@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Port\Out;
+namespace Pollora\Portcullis\Port\Out;
 
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
 
 /**
  * Renders the native login screen in response to a request on the secret slug.

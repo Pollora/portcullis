@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\In\WordPress;
+namespace Pollora\Portcullis\Adapter\In\WordPress;
 
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
 
 /**
  * Warns administrators when published content is shadowed by the login slug.
@@ -55,7 +55,7 @@ final class SlugCollisionNotice
             '<div class="notice notice-warning"><p>%s</p></div>',
             esc_html(sprintf(
                 /* translators: 1: content title, 2: login slug */
-                __('The content "%1$s" uses the slug "%2$s", which is reserved for the login screen: it can no longer be reached from the front end. Rename it, or change HIDDEN_LOGIN_SLUG.', 'hidden-login'),
+                __('The content "%1$s" uses the slug "%2$s", which is reserved for the login screen: it can no longer be reached from the front end. Rename it, or change PORTCULLIS_LOGIN_SLUG.', 'portcullis'),
                 (string) $collision->post_title,
                 $this->slug->value(),
             ))

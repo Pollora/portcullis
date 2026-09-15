@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\Out\WordPress;
+namespace Pollora\Portcullis\Adapter\Out\WordPress;
 
-use Pollora\HiddenLogin\Application\Service\RewriteLoginUrl;
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
-use Pollora\HiddenLogin\Port\Out\LoginScreenRendererPort;
-use Pollora\HiddenLogin\Port\Out\RequestContextPort;
+use Pollora\Portcullis\Application\Service\RewriteLoginUrl;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Port\Out\LoginScreenRendererPort;
+use Pollora\Portcullis\Port\Out\RequestContextPort;
 
 /**
  * Serves the stock `wp-login.php` screen from the secret URL.

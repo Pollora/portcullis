@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Port\Out;
+namespace Pollora\Portcullis\Port\Out;
 
-use Pollora\HiddenLogin\Domain\Model\FeatureState;
+use Pollora\Portcullis\Domain\Model\FeatureState;
 
 /**
  * Tells the package whether it is allowed to register itself.

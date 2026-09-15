@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\In\WordPress;
+namespace Pollora\Portcullis\Adapter\In\WordPress;
 
-use Pollora\HiddenLogin\Application\Service\RewriteLoginUrl;
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Application\Service\RewriteLoginUrl;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
 
 /**
  * Points every login URL WordPress produces at the secret slug.

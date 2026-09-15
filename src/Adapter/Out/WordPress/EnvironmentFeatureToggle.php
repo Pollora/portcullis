@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\Out\WordPress;
+namespace Pollora\Portcullis\Adapter\Out\WordPress;
 
-use Pollora\HiddenLogin\Domain\Model\FeatureState;
-use Pollora\HiddenLogin\Port\Out\FeatureTogglePort;
+use Pollora\Portcullis\Domain\Model\FeatureState;
+use Pollora\Portcullis\Port\Out\FeatureTogglePort;
 
 /**
  * Reads the kill switch from a PHP constant, falling back to the environment.
@@ -20,12 +20,28 @@ final class EnvironmentFeatureToggle implements FeatureTogglePort
     /**
      * Name of the constant and of the environment variable holding the switch.
      */
-    public const KEY = 'HIDDEN_LOGIN_ENABLED';
+    public const KEY = 'PORTCULLIS_ENABLED';
 
     /**
-     * @param  string  $key  Overridable for hosts that already own the default name.
+     * Name the switch was read from in `pollora/hidden-login` 1.x, still honoured
+     * after {@see self::KEY}: an installation that switched 1.x off must not see
+     * it come back on through a rename.
      */
-    public function __construct(private readonly string $key = self::KEY) {}
+    public const LEGACY_KEY = 'HIDDEN_LOGIN_ENABLED';
+
+    /**
+     * @var list<string>
+     */
+    private readonly array $keys;
+
+    /**
+     * @param  string  ...$keys  Names looked up in order. Overridable for hosts that
+     *                           already own the default names.
+     */
+    public function __construct(string ...$keys)
+    {
+        $this->keys = $keys === [] ? [self::KEY, self::LEGACY_KEY] : array_values($keys);
+    }
 
     /**
      * {@inheritDoc}
@@ -36,7 +52,7 @@ final class EnvironmentFeatureToggle implements FeatureTogglePort
     }
 
     /**
-     * The raw value, or `null` when nothing is configured.
+     * The first raw value found, or `null` when nothing is configured.
      *
      * A constant defined as `null` — what `Config::define(..., env(...))`
      * produces for an absent variable — counts as unset, and therefore as
@@ -44,18 +60,24 @@ final class EnvironmentFeatureToggle implements FeatureTogglePort
      */
     private function configuredValue(): bool|string|null
     {
-        if (defined($this->key)) {
-            $value = constant($this->key);
+        foreach ($this->keys as $key) {
+            if (defined($key)) {
+                $value = constant($key);
 
-            if (is_bool($value) || is_string($value)) {
-                return $value;
+                if (is_bool($value) || is_string($value)) {
+                    return $value;
+                }
+
+                continue;
             }
 
-            return null;
+            $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+
+            if (is_string($value)) {
+                return $value;
+            }
         }
 
-        $value = $_ENV[$this->key] ?? $_SERVER[$this->key] ?? getenv($this->key);
-
-        return is_string($value) ? $value : null;
+        return null;
     }
 }

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Application\Service;
+namespace Pollora\Portcullis\Application\Service;
 
-use Pollora\HiddenLogin\Domain\Model\DefaultEndpoint;
+use Pollora\Portcullis\Domain\Model\DefaultEndpoint;
 
 /**
  * Decides whether a request on a stock WordPress entry point must be answered

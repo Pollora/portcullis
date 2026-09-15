@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Pollora\HiddenLogin\Application\Service\MatchHiddenLoginRequest;
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Application\Service\MatchHiddenLoginRequest;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
 
 beforeEach(function (): void {
     $this->matcher = new MatchHiddenLoginRequest;

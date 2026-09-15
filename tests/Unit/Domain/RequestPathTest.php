@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
-use Pollora\HiddenLogin\Domain\Model\RequestPath;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Domain\Model\RequestPath;
 
 it('strips the query string, the slashes and the percent encoding', function (string $uri, string $expected): void {
     expect(RequestPath::fromRequestUri($uri)->value())->toBe($expected);

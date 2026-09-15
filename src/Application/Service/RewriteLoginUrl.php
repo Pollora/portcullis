@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Application\Service;
+namespace Pollora\Portcullis\Application\Service;
 
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
 
 /**
  * Rewrites any URL pointing at `wp-login.php` into the secret login URL.

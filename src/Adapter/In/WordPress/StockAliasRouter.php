@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\In\WordPress;
+namespace Pollora\Portcullis\Adapter\In\WordPress;
 
-use Pollora\HiddenLogin\Application\Service\ClassifyStockAlias;
-use Pollora\HiddenLogin\Domain\Model\DefaultEndpoint;
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
-use Pollora\HiddenLogin\Port\Out\RequestContextPort;
+use Pollora\Portcullis\Application\Service\ClassifyStockAlias;
+use Pollora\Portcullis\Domain\Model\DefaultEndpoint;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Port\Out\RequestContextPort;
 use WP_Rewrite;
 
 /**

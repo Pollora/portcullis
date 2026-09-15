@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Application\Service;
+namespace Pollora\Portcullis\Application\Service;
 
-use Pollora\HiddenLogin\Domain\Exception\InvalidLoginSlugException;
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
-use Pollora\HiddenLogin\Port\Out\SlugProviderPort;
+use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Port\Out\SlugProviderPort;
 
 /**
  * Turns the raw configuration value into a validated {@see LoginSlug}.

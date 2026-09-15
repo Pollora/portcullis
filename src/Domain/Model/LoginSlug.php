@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Domain\Model;
+namespace Pollora\Portcullis\Domain\Model;
 
-use Pollora\HiddenLogin\Domain\Exception\InvalidLoginSlugException;
+use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
 use Stringable;
 
 /**

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Pollora\HiddenLogin\Domain\Exception\InvalidLoginSlugException;
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
 
 it('normalises surrounding slashes and whitespace', function (string $raw): void {
     expect(LoginSlug::fromString($raw)->value())->toBe('connexion');

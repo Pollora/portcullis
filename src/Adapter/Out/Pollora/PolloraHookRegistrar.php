@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\Out\Pollora;
+namespace Pollora\Portcullis\Adapter\Out\Pollora;
 
 use Illuminate\Support\Facades\Facade;
-use Pollora\HiddenLogin\Port\Out\HookRegistrarPort;
+use Pollora\Portcullis\Port\Out\HookRegistrarPort;
 use Pollora\Support\Facades\Action;
 use Pollora\Support\Facades\Filter;
 

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Pollora\HiddenLogin\Application\Service\ClassifyStockAlias;
-use Pollora\HiddenLogin\Domain\Model\DefaultEndpoint;
+use Pollora\Portcullis\Application\Service\ClassifyStockAlias;
+use Pollora\Portcullis\Domain\Model\DefaultEndpoint;
 
 beforeEach(function (): void {
     $this->classifier = new ClassifyStockAlias;

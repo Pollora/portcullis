@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Pollora\HiddenLogin\Adapter\In\WordPress\Cli;
+namespace Pollora\Portcullis\Adapter\In\WordPress\Cli;
 
-use Pollora\HiddenLogin\Domain\Exception\InvalidLoginSlugException;
-use Pollora\HiddenLogin\Domain\Model\LoginSlug;
-use Pollora\HiddenLogin\Port\Out\SlugProviderPort;
+use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
+use Pollora\Portcullis\Port\Out\SlugProviderPort;
 use WP_CLI;
 
 /**
@@ -25,7 +25,7 @@ final class HiddenLoginCommand
     public function __construct(private readonly SlugProviderPort $provider) {}
 
     /**
-     * Registers the `wp hidden-login` command when running under WP-CLI.
+     * Registers the `wp portcullis` command, and its 1.x alias `wp hidden-login`, when running under WP-CLI.
      *
      * @param  SlugProviderPort  $provider  Source of the raw configuration value.
      */
@@ -35,7 +35,12 @@ final class HiddenLoginCommand
             return;
         }
 
-        WP_CLI::add_command('hidden-login', new self($provider));
+        $command = new self($provider);
+
+        WP_CLI::add_command('portcullis', $command);
+
+        // 1.x name, kept so that runbooks written for pollora/hidden-login still work.
+        WP_CLI::add_command('hidden-login', $command);
     }
 
     /**
@@ -43,7 +48,7 @@ final class HiddenLoginCommand
      *
      * ## EXAMPLES
      *
-     *     wp hidden-login url
+     *     wp portcullis url
      *
      * @subcommand url
      */
@@ -71,7 +76,7 @@ final class HiddenLoginCommand
      *
      * ## EXAMPLES
      *
-     *     wp hidden-login status
+     *     wp portcullis status
      *
      * @subcommand status
      */
@@ -80,20 +85,20 @@ final class HiddenLoginCommand
         try {
             $slug = $this->slug();
         } catch (InvalidLoginSlugException $exception) {
-            WP_CLI::line('hidden-login: inactive (the configured slug was rejected).');
+            WP_CLI::line('Hidden login: inactive (the configured slug was rejected).');
             WP_CLI::error($exception->getMessage());
 
             return;
         }
 
         if ($slug === null) {
-            WP_CLI::line('hidden-login: inactive (no slug configured).');
+            WP_CLI::line('Hidden login: inactive (no slug configured).');
             WP_CLI::line('wp-login.php and wp-admin/ behave as WordPress intends.');
 
             return;
         }
 
-        WP_CLI::line('hidden-login: active.');
+        WP_CLI::line('Hidden login: active.');
         WP_CLI::line('Login URL:   '.home_url($slug->toPath()));
         WP_CLI::line('wp-login.php: 404 for everyone.');
         WP_CLI::line('wp-admin/:    404 for anonymous visitors, untouched once authenticated.');
