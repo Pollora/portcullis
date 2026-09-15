@@ -7,4 +7,4 @@ declare(strict_types=1);
  * the unit suite runs without bootstrapping WordPress and without stubs.
  */
 
-uses()->in('Unit');
+uses()->in('Unit', 'Integration');

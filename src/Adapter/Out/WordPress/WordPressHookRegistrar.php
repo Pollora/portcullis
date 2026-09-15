@@ -41,6 +41,14 @@ final class WordPressHookRegistrar implements HookRegistrarPort
     /**
      * {@inheritDoc}
      */
+    public function doAction(string $hook, mixed ...$args): void
+    {
+        do_action($hook, ...$args);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function applyFilters(string $hook, mixed $value, mixed ...$args): mixed
     {
         return apply_filters($hook, $value, ...$args);

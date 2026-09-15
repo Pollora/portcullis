@@ -51,6 +51,14 @@ interface HookRegistrarPort
     public function removeAction(string $hook, callable|string $callback, int $priority = 10): void;
 
     /**
+     * Fires an action.
+     *
+     * @param  string  $hook  Hook name.
+     * @param  mixed  ...$args  Arguments passed to the callbacks.
+     */
+    public function doAction(string $hook, mixed ...$args): void;
+
+    /**
      * Applies a filter and returns the filtered value.
      *
      * @param  string  $hook  Hook name.

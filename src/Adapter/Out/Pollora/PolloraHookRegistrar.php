@@ -71,6 +71,14 @@ final class PolloraHookRegistrar implements HookRegistrarPort
     /**
      * {@inheritDoc}
      */
+    public function doAction(string $hook, mixed ...$args): void
+    {
+        Action::do($hook, ...$args);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function applyFilters(string $hook, mixed $value, mixed ...$args): mixed
     {
         return Filter::apply($hook, $value, ...$args);

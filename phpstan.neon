@@ -14,10 +14,11 @@ parameters:
         - '#Function [a-zA-Z0-9\\_]+ not found#'
         - '#Call to undefined function [a-zA-Z0-9\\_]+#'
         - '#Constant [A-Z0-9_]+ not found#'
-        - '#Class WP_[A-Za-z_]+ not found#'
-        - '#(has invalid type|has unknown class) WP_[A-Za-z_]+#'
+        - '#Class (WP_[A-Za-z_]+|wpdb) not found#'
+        - '#(has invalid (return )?type|has unknown class) (WP_[A-Za-z_]+|wpdb)#'
         - '#Instantiated class WP_[A-Za-z_]+ not found#'
-        - '#Call to (static )?method [a-zA-Z0-9_]+\(\) on an unknown class WP_[A-Za-z_]+#'
+        - '#Call to (static )?method [a-zA-Z0-9_]+\(\) on an unknown class (WP_[A-Za-z_]+|wpdb)#'
+        - '#Access to property \$[a-zA-Z0-9_]+ on an unknown class (WP_[A-Za-z_]+|wpdb)#'
         # Superglobals are untyped by nature; the adapters normalise them.
         - '#Cannot access offset .+ on mixed#'
         # Pollora and Laravel are optional integrations, resolved at runtime by

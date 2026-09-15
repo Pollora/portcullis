@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace Pollora\Portcullis\Domain\Model;
 
 use InvalidArgumentException;
-use Pollora\Portcullis\Application\Service\DeriveSubjects;
 
 /**
  * The pseudonymous key a failure counter is stored under.
  *
  * Neither the address nor the login is ever stored: only a keyed hash of it.
- * The table therefore holds no personal data an operator would have to declare,
- * and a production dump restored elsewhere reveals nothing and blocks no one,
- * because the key differs between environments.
+ * That is pseudonymisation, not anonymisation — whoever holds the secret can
+ * still test whether a given address was recorded — but the table on its own
+ * reveals nothing, and a production dump restored elsewhere blocks no one,
+ * because the secret differs between environments.
  *
- * Instances come from {@see DeriveSubjects},
- * which owns the hashing.
+ * Instances come from the DeriveSubjects application service, which owns the
+ * hashing.
  */
 final class Subject
 {
