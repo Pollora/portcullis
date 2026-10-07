@@ -1,4 +1,15 @@
-# pollora/portcullis
+<p align="center">
+  <a href="https://pollora.dev">
+    <img src="https://raw.githubusercontent.com/Pollora/.github/main/brand/banners/portcullis.png" width="100%" alt="Portcullis: hidden login and brute-force protection for WordPress">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://packagist.org/packages/pollora/portcullis"><img src="https://img.shields.io/packagist/v/pollora/portcullis" alt="Latest Stable Version"></a>
+  <a href="https://packagist.org/packages/pollora/portcullis"><img src="https://img.shields.io/packagist/dt/pollora/portcullis" alt="Total Downloads"></a>
+  <a href="https://github.com/Pollora/portcullis/actions/workflows/tests.yml"><img src="https://github.com/Pollora/portcullis/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Pollora/portcullis" alt="License"></a>
+</p>
 
 Secures the WordPress login, with two independent features:
 
@@ -21,11 +32,13 @@ plugins intend, at a different address.
 composer require pollora/portcullis
 ```
 
+Requires PHP 8.1 or later. Pollora is not a dependency: it runs on any Composer-managed WordPress, Bedrock included.
+
 That is the whole installation. The package registers itself through Composer's
 `autoload.files`, which on a WordPress installation runs from `wp-config.php` —
 well before `add_action()` even exists. It therefore schedules its own boot on
-`muplugins_loaded` through WordPress' pre-initialised hook array, the mechanism
-`wp-settings.php` normalises with `WP_Hook::build_preinitialized_hooks()`. No
+`muplugins_loaded` through WordPress' pre-initialized hook array, the mechanism
+`wp-settings.php` normalizes with `WP_Hook::build_preinitialized_hooks()`. No
 must-use plugin, no service provider, no call to add anywhere.
 
 Hosts that need control over the moment, or want to inject their own adapters,
@@ -57,7 +70,7 @@ PORTCULLIS_ENABLED=false   # optional kill switch for both features, enabled by 
 ```
 
 It defaults to enabled: an installation that pulled the package in has opted in,
-so turning it off has to be deliberate. An unrecognised value counts as enabled,
+so turning it off has to be deliberate. An unrecognized value counts as enabled,
 because a typo must not silently drop a security control.
 
 ### Hidden login
@@ -107,7 +120,7 @@ A rejected value — a threshold that is not an integer, a lockout longer than t
 validity window, a malformed range — does not switch the protection off: the
 defaults apply, and the error is logged and shown as an admin notice.
 
-## Behaviour
+## Behavior
 
 ### Hidden login
 
@@ -201,7 +214,7 @@ neither lose increments nor stack lockouts. Expired counters are purged daily,
 in batches, through WP-Cron.
 
 Addresses and logins are never stored in clear: rows are keyed by an
-HMAC-SHA256 under `PORTCULLIS_SECRET`. That is pseudonymisation — whoever holds
+HMAC-SHA256 under `PORTCULLIS_SECRET`. That is pseudonymization — whoever holds
 the secret can still test whether an address was recorded — but the table alone
 reveals nothing, and a production dump restored elsewhere blocks nobody, because
 the secret differs between environments.
@@ -212,7 +225,7 @@ Any other storage — Redis, say — plugs in by implementing `AttemptStorePort`
 \Pollora\Portcullis\Portcullis::boot(store: new MyRedisAttemptStore());
 ```
 
-Its expected behaviour is pinned down by the contract suite in `tests/Contract`,
+Its expected behavior is pinned down by the contract suite in `tests/Contract`,
 which the MySQL adapter and the in-memory reference implementation both pass.
 
 Storage errors fail open: the error is logged and logins keep working, rather
@@ -299,7 +312,7 @@ own pace:
 Two things change on upgrade:
 
 - **Brute-force protection is on by default.** Set
-  `PORTCULLIS_THROTTLE_ENABLED=false` to keep the 1.x behaviour, and set
+  `PORTCULLIS_THROTTLE_ENABLED=false` to keep the 1.x behavior, and set
   `PORTCULLIS_TRUSTED_PROXIES` first if the site sits behind a reverse proxy —
   otherwise every visitor shares the proxy's address.
 - **`HookRegistrarPort` gained `doAction()`.** Only custom implementations of the
@@ -390,7 +403,7 @@ consequences:
 If a theme or plugin misbehaves in that context, opt out with
 `portcullis/render_theme_404`.
 
-## Quality
+## Testing
 
 ```bash
 composer test          # pest (unit) + phpstan + pint --test
@@ -405,3 +418,11 @@ real WordPress installation, on a table of its own:
 ```bash
 PORTCULLIS_WP_LOAD=/path/to/wp-load.php vendor/bin/pest --testsuite=Integration
 ```
+
+## Contributing
+
+Contributions are welcome: see the [contributing guide](https://github.com/Pollora/.github/blob/main/CONTRIBUTING.md). Report security issues privately, as described in the [security policy](https://github.com/Pollora/.github/blob/main/SECURITY.md).
+
+## License
+
+Portcullis is open-source software licensed under the [MIT license](LICENSE). © [RuBee group](https://rubee.group)
