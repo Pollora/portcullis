@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Pollora\Portcullis\Domain\Model;
 
+/**
+ * Which kind of URL an author archive was requested through.
+ */
 enum AuthorArchiveUrl
 {
     /**

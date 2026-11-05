@@ -318,6 +318,9 @@ final class PortcullisCommand
         WP_CLI::line('Author archives: '.$this->authorArchivesStatus());
     }
 
+    /**
+     * Describes the author archive policy in one line.
+     */
     private function authorArchivesStatus(): string
     {
         return match ($this->enumerationSettings->authorArchivePolicy()) {

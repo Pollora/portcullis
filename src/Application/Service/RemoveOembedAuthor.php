@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Pollora\Portcullis\Application\Service;
 
 /**
- * `author_url` is the author archive. Both fields are optional in oEmbed.
+ * Removes the author fields from an oEmbed response. `author_url` is the author
+ * archive, `author_name` spells the display name out, and both fields are
+ * optional in oEmbed.
  */
 final class RemoveOembedAuthor
 {
@@ -15,8 +17,10 @@ final class RemoveOembedAuthor
     private const AUTHOR_FIELDS = ['author_name', 'author_url'];
 
     /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
+     * Drops `author_name` and `author_url` from the response data.
+     *
+     * @param  array<string, mixed>  $data  The oEmbed response data.
+     * @return array<string, mixed> The same data without the author fields.
      */
     public function remove(array $data): array
     {
