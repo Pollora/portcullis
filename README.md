@@ -11,12 +11,14 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Pollora/portcullis" alt="License"></a>
 </p>
 
-Secures the WordPress login, with two independent features:
+Secures the WordPress login, with three independent features:
 
 - **Hidden login** — serves the login screen from a secret URL, and answers
   `wp-login.php` and `wp-admin/` with a genuine 404.
 - **Brute-force protection** — locks out addresses and accounts after repeated
   failed logins, on the login screen, XML-RPC and REST application passwords alike.
+- **Account enumeration protection** — stops WordPress from publishing account
+  slugs, which are the logins unless someone changed them by hand.
 
 Unlike the usual "rename wp-login" plugins, the hidden login does not reimplement
 the login screen: it includes the WordPress file itself from the secret URL. Every
@@ -66,7 +68,7 @@ leak production secrets or lock developers out.
 ### Package
 
 ```dotenv
-PORTCULLIS_ENABLED=false   # optional kill switch for both features, enabled by default
+PORTCULLIS_ENABLED=false   # optional kill switch for every feature, enabled by default
 ```
 
 It defaults to enabled: an installation that pulled the package in has opted in,
@@ -119,6 +121,20 @@ PORTCULLIS_GENERIC_LOGIN_ERRORS=true      # stop telling unknown accounts from w
 A rejected value — a threshold that is not an integer, a lockout longer than the
 validity window, a malformed range — does not switch the protection off: the
 defaults apply, and the error is logged and shown as an admin notice.
+
+### Account enumeration protection
+
+```dotenv
+PORTCULLIS_HIDE_ACCOUNTS=true      # enabled by default
+PORTCULLIS_AUTHOR_ARCHIVES=true    # false closes /author/<slug> and points author links home
+```
+
+The two keys are independent: a headless front end that reads `/wp/v2/users`
+can keep it with `PORTCULLIS_HIDE_ACCOUNTS=false` and still close the archives.
+
+Author archives that list posts stay public unless `PORTCULLIS_AUTHOR_ARCHIVES`
+is set to a falsy value: closing them changes public URLs, so it has to be asked
+for. An unrecognized value keeps them public.
 
 ## Behavior
 
@@ -240,6 +256,39 @@ and the login appear in clear — in a format suitable for grepping or fail2ban:
 [portcullis] lockout scope=ip ip=203.0.113.7 login="admin" until=2026-09-15T14:25:42Z tier=regular
 ```
 
+### Account enumeration protection
+
+WordPress derives an account's slug from its login, then publishes the slug in
+several places. Each one gives away half of the credentials — the half the
+hidden login and the brute-force protection assume is unknown.
+
+| Request | Response |
+| --- | --- |
+| `/wp-json/wp/v2/users`, `/wp-json/wp/v2/users/{id}` | `rest_no_route`, for users who cannot `edit_posts`. The block editor's author selector keeps working |
+| `/wp-json/wp/v2/users/me` | Untouched — it only ever describes the requester |
+| `/wp-json/` | No longer lists the two routes above |
+| `?author=<id>`, under pretty permalinks | The theme's 404, without the redirect whose `Location` spelled the slug. Without pretty permalinks it is the canonical archive URL, and follows the archive rules below |
+| `wp-sitemap-users-*.xml` | No users sitemap |
+| oEmbed responses | No `author_name`, no `author_url` |
+| Comments by registered users | No `comment-author-<slug>` class; `byuser` and `bypostauthor` stay |
+| `/author/<slug>` and its feeds, for an account without published posts | The theme's 404. Core answers them for any member — a customer included — which confirms that the account exists |
+| `/author/<slug>` and its feeds, for an author with posts | Public; the theme's 404 with `PORTCULLIS_AUTHOR_ARCHIVES=false` |
+| `get_author_posts_url()` | The home URL, or what `portcullis/author_link` returns, with `PORTCULLIS_AUTHOR_ARCHIVES=false` only |
+
+The routes are removed rather than refused, so that the answer is the one an
+installation without them would give. Archives are answered with a 404 where core
+decides its own, on the resolved main query: REST requests filtered by author,
+forms that post an `author` field and the administration's post lists by author
+are left alone.
+
+Two disclosures are out of the package's reach:
+
+- **The display name.** WordPress fills it with the login when an account is
+  created, and themes, feeds and SEO plugins print it on every post. Give each
+  author a display name of their own.
+- **SEO plugins' author sitemaps and archives.** Yoast SEO, for instance, has its
+  own author sitemap: switch it off from the plugin's settings.
+
 ## Operations
 
 WP-CLI is never intercepted — it is the way back in when the slug is lost or an
@@ -265,10 +314,12 @@ wp portcullis purge                 # deletes expired counters now
 | `portcullis/render_theme_404` | filter | Set to `false` to answer blocked requests with a minimal document instead of the theme's 404 template. |
 | `portcullis/lockout_message` | filter | Message shown to a locked-out visitor. Receives the message and the timestamp the lockout ends at. |
 | `portcullis/locked_out` | action | Fires on every lockout with the `Lockout`, the `ClientIp` and the submitted login — for emails, a SIEM, a chat channel. |
+| `portcullis/account_listing_capability` | filter | Capability that keeps `/wp/v2/users` reachable. `edit_posts` by default. |
+| `portcullis/author_link` | filter | Where author links point once `PORTCULLIS_AUTHOR_ARCHIVES=false` closes the archives. Receives the home URL and the author ID. |
 
 Every adapter can be replaced through `Portcullis::boot()`: `SlugProviderPort`,
-`FeatureTogglePort`, `HookRegistrarPort`, `ThrottleSettingsPort` and
-`AttemptStorePort`.
+`FeatureTogglePort`, `HookRegistrarPort`, `ThrottleSettingsPort`,
+`AttemptStorePort` and `AccountEnumerationSettingsPort`.
 
 ## Hook system
 
@@ -331,12 +382,15 @@ src/
 ├── Application/         Pure decisions — ResolveLoginSlug, MatchHiddenLoginRequest,
 │                        GuardDefaultEndpoints, ClassifyStockAlias, RewriteLoginUrl,
 │                        ResolveClientIp, DeriveSubjects, CheckLockout, RecordFailedAttempt,
-│                        ClearAttempts
+│                        ClearAttempts, RemoveAccountRoutes, ConcealAuthorArchive,
+│                        RemoveCommentAuthorClass, RemoveOembedAuthor
 ├── Port/Out/            SlugProvider, FeatureToggle, HookRegistrar, RequestContext,
 │                        LoginScreenRenderer, NotFoundResponder, AttemptStore, Clock,
-│                        ClientAddress, ThrottleSettings, LockoutNotifier
+│                        ClientAddress, ThrottleSettings, LockoutNotifier,
+│                        AccountEnumerationSettings
 ├── Adapter/In/          Routers, URL rewriter, admin notice, login throttle guard,
-│                        generic login errors, purge scheduler, WP-CLI command
+│                        generic login errors, purge scheduler, account enumeration
+│                        and author archive guards, WP-CLI command
 ├── Adapter/Out/WordPress/  Plugin API, superglobals, wp-login.php, theme 404,
 │                           environment settings, MySQL store and schema, error log
 ├── Adapter/Out/Pollora/    Hook registrar backed by the framework's facades
@@ -412,8 +466,10 @@ composer phpstan
 composer lint
 ```
 
-The integration suite runs the storage contract against the MySQL adapter on a
-real WordPress installation, on a table of its own:
+The integration suite runs the storage contract against the MySQL adapter, on a
+table of its own, and the account enumeration adapters, on a real WordPress
+installation. It creates users, posts and a comment, so point it at a disposable
+one:
 
 ```bash
 PORTCULLIS_WP_LOAD=/path/to/wp-load.php vendor/bin/pest --testsuite=Integration

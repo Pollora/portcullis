@@ -6,15 +6,18 @@ namespace Pollora\Portcullis\Adapter\In\WordPress\Cli;
 
 use Pollora\Portcullis\Adapter\In\WordPress\AccountIdentifier;
 use Pollora\Portcullis\Adapter\In\WordPress\AttemptPurgeScheduler;
+use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentAccountEnumerationSettings;
 use Pollora\Portcullis\Adapter\Out\WordPress\WpdbSchema;
 use Pollora\Portcullis\Application\Service\ClearAttempts;
 use Pollora\Portcullis\Application\Service\DeriveSubjects;
 use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
+use Pollora\Portcullis\Domain\Model\AuthorArchivePolicy;
 use Pollora\Portcullis\Domain\Model\ClientIp;
 use Pollora\Portcullis\Domain\Model\LoginSlug;
 use Pollora\Portcullis\Domain\Model\Subject;
 use Pollora\Portcullis\Domain\Model\SubjectScope;
 use Pollora\Portcullis\Domain\Model\ThrottleSettings;
+use Pollora\Portcullis\Port\Out\AccountEnumerationSettingsPort;
 use Pollora\Portcullis\Port\Out\AttemptStorePort;
 use Pollora\Portcullis\Port\Out\ClockPort;
 use Pollora\Portcullis\Port\Out\SlugProviderPort;
@@ -40,6 +43,7 @@ final class PortcullisCommand
      * @param  ClockPort|null  $clock  Current time, `null` when the protection is off.
      * @param  AttemptPurgeScheduler|null  $purge  Purges expired counters, `null` when the protection is off.
      * @param  WpdbSchema|null  $schema  Table schema, `null` unless the default MySQL store is used.
+     * @param  AccountEnumerationSettingsPort  $enumerationSettings  Account enumeration settings.
      */
     public function __construct(
         private readonly SlugProviderPort $provider,
@@ -50,6 +54,7 @@ final class PortcullisCommand
         private readonly ?ClockPort $clock = null,
         private readonly ?AttemptPurgeScheduler $purge = null,
         private readonly ?WpdbSchema $schema = null,
+        private readonly AccountEnumerationSettingsPort $enumerationSettings = new EnvironmentAccountEnumerationSettings,
     ) {}
 
     /**
@@ -111,6 +116,8 @@ final class PortcullisCommand
         $this->hiddenLoginStatus();
         WP_CLI::line('');
         $this->throttleStatus();
+        WP_CLI::line('');
+        $this->accountEnumerationStatus();
     }
 
     /**
@@ -293,6 +300,31 @@ final class PortcullisCommand
         WP_CLI::line('Login URL:    '.home_url($slug->toPath()));
         WP_CLI::line('wp-login.php: 404 for everyone.');
         WP_CLI::line('wp-admin/:    404 for anonymous visitors, untouched once authenticated.');
+    }
+
+    /**
+     * Prints the state of the account enumeration protection.
+     */
+    private function accountEnumerationStatus(): void
+    {
+        $hidesAccounts = $this->enumerationSettings->isEnabled();
+
+        WP_CLI::line('Account enumeration protection: '.($hidesAccounts ? 'active.' : 'inactive.'));
+
+        if ($hidesAccounts) {
+            WP_CLI::line('/wp/v2/users:    removed for users who cannot list accounts.');
+        }
+
+        WP_CLI::line('Author archives: '.$this->authorArchivesStatus());
+    }
+
+    private function authorArchivesStatus(): string
+    {
+        return match ($this->enumerationSettings->authorArchivePolicy()) {
+            AuthorArchivePolicy::Closed => '404, author links point home.',
+            AuthorArchivePolicy::PublicWithPosts => 'public when they list posts; 404 otherwise, and for ?author=<id>.',
+            AuthorArchivePolicy::Untouched => 'as WordPress serves them.',
+        };
     }
 
     /**

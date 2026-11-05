@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Account enumeration protection, enabled by default and switched off with
+  `PORTCULLIS_HIDE_ACCOUNTS=false`: `/wp/v2/users` and `/wp/v2/users/{id}` are
+  removed for users who cannot `edit_posts`, `?author=<id>` answers a 404
+  instead of redirecting to the author's slug, author archives of accounts
+  without published posts answer a 404, the users sitemap is dropped, and
+  oEmbed responses and comment classes no longer carry the slug.
+- `PORTCULLIS_AUTHOR_ARCHIVES=false` answers every author archive with a 404 and
+  points author links to the home page, independently of
+  `PORTCULLIS_HIDE_ACCOUNTS`. Off by default, since it changes public URLs.
+- `portcullis/account_listing_capability` and `portcullis/author_link` filters.
+- `wp portcullis status` reports the account enumeration protection.
+- Integration tests for the account enumeration adapters.
+
+### Upgrading
+
+The protection is on as soon as the package is updated. Two changes can reach an
+existing integration:
+
+- **Anonymous `/wp/v2/users` requests answer `rest_no_route`.** A headless front
+  end that reads author data without authenticating, `_embed` included, loses it:
+  set `PORTCULLIS_HIDE_ACCOUNTS=false`, or authenticate it and widen
+  `portcullis/account_listing_capability`.
+- **`?author=<id>`, the users sitemap and the archives of accounts without posts
+  answer a 404.** Links or sitemap submissions that point to them stop resolving.
+
 ## 2.0.1 — 2026-09-15
 
 ### Fixed

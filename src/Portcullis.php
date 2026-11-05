@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Pollora\Portcullis;
 
 use InvalidArgumentException;
+use Pollora\Portcullis\Adapter\In\WordPress\AccountEnumerationGuard;
 use Pollora\Portcullis\Adapter\In\WordPress\AccountIdentifier;
 use Pollora\Portcullis\Adapter\In\WordPress\AttemptPurgeScheduler;
+use Pollora\Portcullis\Adapter\In\WordPress\AuthorArchiveGuard;
+use Pollora\Portcullis\Adapter\In\WordPress\AuthorLinkRewriter;
 use Pollora\Portcullis\Adapter\In\WordPress\Cli\PortcullisCommand;
 use Pollora\Portcullis\Adapter\In\WordPress\GenericLoginErrors;
 use Pollora\Portcullis\Adapter\In\WordPress\HiddenLoginRouter;
@@ -16,6 +19,7 @@ use Pollora\Portcullis\Adapter\In\WordPress\SlugCollisionNotice;
 use Pollora\Portcullis\Adapter\In\WordPress\StockAliasRouter;
 use Pollora\Portcullis\Adapter\In\WordPress\StorageHealthNotice;
 use Pollora\Portcullis\Adapter\Out\Pollora\PolloraHookRegistrar;
+use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentAccountEnumerationSettings;
 use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentFeatureToggle;
 use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentSlugProvider;
 use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentThrottleSettings;
@@ -31,16 +35,22 @@ use Pollora\Portcullis\Adapter\Out\WordPress\WpLoginScreenRenderer;
 use Pollora\Portcullis\Application\Service\CheckLockout;
 use Pollora\Portcullis\Application\Service\ClassifyStockAlias;
 use Pollora\Portcullis\Application\Service\ClearAttempts;
+use Pollora\Portcullis\Application\Service\ConcealAuthorArchive;
 use Pollora\Portcullis\Application\Service\DeriveSubjects;
 use Pollora\Portcullis\Application\Service\GuardDefaultEndpoints;
 use Pollora\Portcullis\Application\Service\MatchHiddenLoginRequest;
 use Pollora\Portcullis\Application\Service\RecordFailedAttempt;
+use Pollora\Portcullis\Application\Service\RemoveAccountRoutes;
+use Pollora\Portcullis\Application\Service\RemoveCommentAuthorClass;
+use Pollora\Portcullis\Application\Service\RemoveOembedAuthor;
 use Pollora\Portcullis\Application\Service\ResolveClientIp;
 use Pollora\Portcullis\Application\Service\ResolveLoginSlug;
 use Pollora\Portcullis\Application\Service\RewriteLoginUrl;
 use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
+use Pollora\Portcullis\Domain\Model\AuthorArchivePolicy;
 use Pollora\Portcullis\Domain\Model\ThrottlePolicy;
 use Pollora\Portcullis\Domain\Model\ThrottleSettings;
+use Pollora\Portcullis\Port\Out\AccountEnumerationSettingsPort;
 use Pollora\Portcullis\Port\Out\AttemptStorePort;
 use Pollora\Portcullis\Port\Out\FeatureTogglePort;
 use Pollora\Portcullis\Port\Out\HookRegistrarPort;
@@ -60,8 +70,8 @@ use Throwable;
  * \Pollora\Portcullis\Portcullis::boot(store: new MyRedisAttemptStore());
  * ```
  *
- * The package is made of two features, booted independently so that either can
- * be used without the other:
+ * The package is made of three features, booted independently so that any of
+ * them can be used without the others:
  *
  * - **Hidden login** serves the login screen from `PORTCULLIS_LOGIN_SLUG`, and
  *   answers `wp-login.php` and anonymous `wp-admin/` requests with a 404. No slug
@@ -72,8 +82,12 @@ use Throwable;
  * - **Brute-force protection** locks out addresses and accounts after repeated
  *   failed logins. Enabled by default, switched off with
  *   `PORTCULLIS_THROTTLE_ENABLED=false`.
+ * - **Account enumeration protection** stops WordPress from publishing account
+ *   slugs — the logins, unless changed by hand. Enabled by default, switched off
+ *   with `PORTCULLIS_HIDE_ACCOUNTS=false`. `PORTCULLIS_AUTHOR_ARCHIVES=false`
+ *   closes the author archives, on its own.
  *
- * `PORTCULLIS_ENABLED` set to a falsy value switches both off. Enabled by
+ * `PORTCULLIS_ENABLED` set to a falsy value switches them all off. Enabled by
  * default: an installation that pulled the package in has opted in.
  */
 final class Portcullis
@@ -108,6 +122,10 @@ final class Portcullis
      *                                                       {@see EnvironmentThrottleSettings}.
      * @param  AttemptStorePort|null  $store  Where failure counters are kept. Defaults to
      *                                        {@see WpdbAttemptStore}, a dedicated table.
+     * @param  AccountEnumerationSettingsPort|null  $enumerationSettings  Where to read the account
+     *                                                                    enumeration settings from.
+     *                                                                    Defaults to
+     *                                                                    {@see EnvironmentAccountEnumerationSettings}.
      */
     public static function boot(
         ?SlugProviderPort $slugProvider = null,
@@ -115,6 +133,7 @@ final class Portcullis
         ?HookRegistrarPort $hooks = null,
         ?ThrottleSettingsPort $throttleSettings = null,
         ?AttemptStorePort $store = null,
+        ?AccountEnumerationSettingsPort $enumerationSettings = null,
     ): void {
         if (self::$booted) {
             return;
@@ -129,10 +148,14 @@ final class Portcullis
         $provider = $slugProvider ?? new EnvironmentSlugProvider;
         $registrar = $hooks ?? self::detectHookRegistrar();
 
-        self::bootHiddenLogin($provider, $registrar);
+        $enumerationSettings ??= new EnvironmentAccountEnumerationSettings;
 
-        $command = self::bootThrottle($throttleSettings ?? new EnvironmentThrottleSettings, $store, $provider, $registrar)
-            ?? new PortcullisCommand($provider);
+        self::bootHiddenLogin($provider, $registrar);
+        self::bootAccountEnumeration($enumerationSettings, $registrar);
+        self::bootAuthorArchives($enumerationSettings, $registrar);
+
+        $command = self::bootThrottle($throttleSettings ?? new EnvironmentThrottleSettings, $store, $provider, $enumerationSettings, $registrar)
+            ?? new PortcullisCommand($provider, enumerationSettings: $enumerationSettings);
 
         PortcullisCommand::register($command);
     }
@@ -177,6 +200,49 @@ final class Portcullis
     }
 
     /**
+     * Wires the account enumeration protection, when it is enabled.
+     *
+     * @param  AccountEnumerationSettingsPort  $settings  Source of the settings.
+     * @param  HookRegistrarPort  $registrar  Hook system of the host.
+     */
+    private static function bootAccountEnumeration(AccountEnumerationSettingsPort $settings, HookRegistrarPort $registrar): void
+    {
+        if (! $settings->isEnabled()) {
+            return;
+        }
+
+        (new AccountEnumerationGuard(
+            new RemoveAccountRoutes,
+            new RemoveCommentAuthorClass,
+            new RemoveOembedAuthor,
+            $registrar,
+        ))->register();
+    }
+
+    /**
+     * Wires the author archive policy, independent of the account enumeration
+     * protection: a headless front end may need the REST routes and still close
+     * the archives.
+     *
+     * @param  AccountEnumerationSettingsPort  $settings  Source of the settings.
+     * @param  HookRegistrarPort  $registrar  Hook system of the host.
+     */
+    private static function bootAuthorArchives(AccountEnumerationSettingsPort $settings, HookRegistrarPort $registrar): void
+    {
+        $policy = $settings->authorArchivePolicy();
+
+        if ($policy === AuthorArchivePolicy::Untouched) {
+            return;
+        }
+
+        (new AuthorArchiveGuard(new ConcealAuthorArchive($policy), $registrar))->register();
+
+        if ($policy === AuthorArchivePolicy::Closed) {
+            (new AuthorLinkRewriter($registrar))->register();
+        }
+    }
+
+    /**
      * Wires the brute-force protection, when it is enabled.
      *
      * A rejected configuration does not switch the protection off: the defaults
@@ -186,6 +252,7 @@ final class Portcullis
      * @param  ThrottleSettingsPort  $settingsPort  Source of the settings.
      * @param  AttemptStorePort|null  $store  Injected store, `null` for the default table.
      * @param  SlugProviderPort  $provider  Source of the raw slug, for the CLI command.
+     * @param  AccountEnumerationSettingsPort  $enumerationSettings  Account enumeration settings, for the CLI command.
      * @param  HookRegistrarPort  $registrar  Hook system of the host.
      * @return PortcullisCommand|null The CLI command wired with the protection, `null` when it is off.
      */
@@ -193,6 +260,7 @@ final class Portcullis
         ThrottleSettingsPort $settingsPort,
         ?AttemptStorePort $store,
         SlugProviderPort $provider,
+        AccountEnumerationSettingsPort $enumerationSettings,
         HookRegistrarPort $registrar,
     ): ?PortcullisCommand {
         if (! $settingsPort->isEnabled()) {
@@ -248,7 +316,7 @@ final class Portcullis
             (new GenericLoginErrors($registrar))->register();
         }
 
-        return new PortcullisCommand($provider, $settings, $store, $subjects, $accounts, $clock, $purge, $schema);
+        return new PortcullisCommand($provider, $settings, $store, $subjects, $accounts, $clock, $purge, $schema, $enumerationSettings);
     }
 
     /**

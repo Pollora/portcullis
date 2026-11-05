@@ -1,6 +1,6 @@
 {
     "name": "pollora/portcullis",
-    "description": "Secures the WordPress login: serves it from a secret URL, answers wp-login.php and wp-admin with a 404, and locks out brute-force attempts",
+    "description": "Secures the WordPress login: serves it from a secret URL, answers wp-login.php and wp-admin with a 404, locks out brute-force attempts, and stops account enumeration",
     "type": "library",
     "keywords": [
         "wordpress",
@@ -8,6 +8,7 @@
         "login",
         "brute-force",
         "limit-login-attempts",
+        "user-enumeration",
         "hardening",
         "bedrock"
     ],
