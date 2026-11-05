@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Pollora\Portcullis\Application\Service;
 
+/**
+ * Removes the REST routes that list accounts. They are removed rather than
+ * refused, so that the answer is the one an installation without them gives.
+ */
 final class RemoveAccountRoutes
 {
     /**
@@ -17,8 +21,10 @@ final class RemoveAccountRoutes
     ];
 
     /**
-     * @param  array<string, mixed>  $routes
-     * @return array<string, mixed>
+     * Drops `/wp/v2/users` and `/wp/v2/users/{id}` from the route map.
+     *
+     * @param  array<string, mixed>  $routes  Registered REST routes, keyed by pattern.
+     * @return array<string, mixed> The same routes without the two account routes.
      */
     public function remove(array $routes): array
     {
