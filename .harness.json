@@ -7,6 +7,6 @@
     "ratchet": {
         "phpstan_level": 5,
         "phpstan_baseline": 1,
-        "coverage": 24.5
+        "coverage": 95.0
     }
 }
