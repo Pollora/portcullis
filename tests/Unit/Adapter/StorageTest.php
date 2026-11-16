@@ -599,7 +599,7 @@ describe('SlugCollisionNotice', function (): void {
 
         expect($html)->toContain('notice-warning')
             ->and($html)->toContain('My &lt;b&gt;page&lt;/b&gt;')
-            ->and($html)->toContain('"acces-secret"')
+            ->and($html)->toContain('&quot;acces-secret&quot;')
             ->and(Wp::$pageLookups[0][2])->toBe(['post', 'page']);
     });
 
