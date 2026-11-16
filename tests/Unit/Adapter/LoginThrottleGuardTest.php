@@ -280,8 +280,8 @@ it('counts per address only when the account scope is not counted', function ():
     expect(attemptLogin('admin', new WP_User(1, 'admin', 'admin')))->toBeInstanceOf(WP_User::class);
 });
 
-it('treats the same account the same whatever the case-insensitive identifier it was typed as', function (): void {
-    // "admin" and the address the user owns are one account once resolved.
+it('counts the login and the email address of one user as the same account', function (): void {
+    // The login and the address the user owns are one account once resolved.
     $user = new WP_User(42, 'admin', 'admin');
     Wp::$usersByLogin['admin'] = $user;
     Wp::$usersByEmail['admin@example.test'] = $user;

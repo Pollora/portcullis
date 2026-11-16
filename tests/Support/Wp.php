@@ -41,6 +41,9 @@ final class Wp
     /** @var list<string> */
     public static array $capabilities = [];
 
+    /** @var (callable(): mixed)|null Runs inside home_url(), to simulate a filter that re-enters it. */
+    public static $onHomeUrl = null;
+
     public static string $home = 'https://example.test';
 
     public static string $site = 'https://example.test/wp';
@@ -90,6 +93,7 @@ final class Wp
         self::$doingCron = false;
         self::$is404 = false;
         self::$capabilities = [];
+        self::$onHomeUrl = null;
         self::$home = 'https://example.test';
         self::$site = 'https://example.test/wp';
         self::$usersByLogin = [];

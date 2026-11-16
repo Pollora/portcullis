@@ -292,6 +292,10 @@ if (! function_exists('did_action')) {
 if (! function_exists('home_url')) {
     function home_url($path = '', $scheme = null)
     {
+        if (Wp::$onHomeUrl !== null) {
+            (Wp::$onHomeUrl)();
+        }
+
         return wpFakeUrl(Wp::$home, $path, $scheme);
     }
 }
