@@ -20,7 +20,7 @@
         }
     ],
     "require": {
-        "php": ">=8.1"
+        "php": "^8.3"
     },
     "conflict": {
         "pollora/hidden-login": "*"
@@ -28,7 +28,8 @@
     "require-dev": {
         "laravel/pint": "^1.18",
         "pestphp/pest": "^2.34",
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "pollora/harness": "^0.1.23"
     },
     "autoload": {
         "psr-4": {
@@ -61,7 +62,9 @@
         "phpstan": "phpstan analyse src compat tests --level=5",
         "phpstan:ci": "phpstan analyse src compat tests --level=5 --no-progress",
         "lint": "pint",
-        "lint:check": "pint --test"
+        "lint:check": "pint --test",
+        "qa": "@php vendor/bin/pollora-qa check",
+        "qa:fast": "@php vendor/bin/pollora-qa check --fast"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

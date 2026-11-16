@@ -34,7 +34,7 @@ plugins intend, at a different address.
 composer require pollora/portcullis
 ```
 
-Requires PHP 8.1 or later. Pollora is not a dependency: it runs on any Composer-managed WordPress, Bedrock included.
+Requires PHP 8.3 or later. Pollora is not a dependency: it runs on any Composer-managed WordPress, Bedrock included.
 
 That is the whole installation. The package registers itself through Composer's
 `autoload.files`, which on a WordPress installation runs from `wp-config.php` —
@@ -334,7 +334,7 @@ runtime:
 
 Pollora is not a dependency: the adapter is only autoloaded once
 `PolloraHookRegistrar::isAvailable()` says so, which keeps the package installable
-on a bare Bedrock site and its PHP floor at 8.1.
+on a bare Bedrock site and its PHP floor at 8.3.
 
 The single exception is `Bootstrap`, which by definition runs before either
 implementation could work.
