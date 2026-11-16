@@ -370,6 +370,7 @@ describe('WpdbAttemptStore', function (): void {
             'clear' => fn () => $store->clear([subjectOf('a')]),
             'purgeExpired' => fn () => $store->purgeExpired(1, 1),
             'activeLockouts' => fn () => $store->activeLockouts(1, 1),
+            default => throw new LogicException($operation),
         };
 
         expect($run)->toThrow(RuntimeException::class, '[portcullis] Lost connection to MySQL server');

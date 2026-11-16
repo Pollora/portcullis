@@ -33,10 +33,14 @@ if (! class_exists('WP_Error')) {
         /** @var array<string, list<string>> */
         public array $errors = [];
 
+        /** @var array<string, mixed> */
+        public array $error_data = [];
+
         public function __construct(string|int $code = '', string $message = '', mixed $data = '')
         {
             if ($code !== '') {
                 $this->errors[(string) $code][] = $message;
+                $this->error_data[(string) $code] = $data;
             }
         }
 
@@ -120,6 +124,16 @@ if (! class_exists('WP_Query')) {
         {
             $this->set404 = true;
         }
+
+        public function is_404(): bool
+        {
+            return $this->set404;
+        }
+
+        public function is_single(): bool
+        {
+            return false;
+        }
     }
 }
 
@@ -194,7 +208,6 @@ if (! class_exists('wpdb')) {
             return array_shift($this->rowResults);
         }
 
-        /** @return mixed */
         public function get_results(string $query, string $output = OBJECT): mixed
         {
             $this->queries[] = $query;

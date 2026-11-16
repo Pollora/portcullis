@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Pollora\Portcullis\Tests\Support\Wp;
 
 /*
  * The Domain and Application layers are free of WordPress calls by design, so
@@ -22,8 +23,12 @@ $portcullisRealWordPress = is_string(getenv('PORTCULLIS_WP_LOAD')) && getenv('PO
 
 if (! $portcullisRealWordPress) {
     require_once __DIR__.'/Support/wordpress-fakes.php';
+    require_once __DIR__.'/Support/wp-cli-fakes.php';
 
     uses()->beforeEach(function (): void {
-        \Pollora\Portcullis\Tests\Support\Wp::reset();
+        Wp::reset();
+        WP_CLI::reset();
     })->in('Unit');
 }
+
+require_once __DIR__.'/Support/php-subprocess.php';

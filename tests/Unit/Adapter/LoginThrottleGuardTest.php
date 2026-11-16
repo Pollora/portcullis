@@ -35,12 +35,13 @@ const THROTTLE_SECRET = 'a-secret-long-enough-for-the-subject-derivation';
  *
  * @param  list<string>  $allowlist
  * @param  list<string>  $trustedProxies
- * @return array{guard: LoginThrottleGuard, store: InMemoryAttemptStore, clock: FrozenClock, hooks: RecordingHooks, notified: ArrayObject<int, Lockout>}
+ * @return array{guard: LoginThrottleGuard, store: InMemoryAttemptStore, clock: FrozenClock, hooks: RecordingHooks, notified: ArrayObject<int, array{Lockout, ClientIp, string}>}
  */
-function throttleGuard(array $allowlist = [], array $trustedProxies = [], ?AttemptStorePort $store = null, bool $accountScope = true): array
+function throttleGuard(array $allowlist = [], array $trustedProxies = [], ?AttemptStorePort $failing = null, bool $accountScope = true): array
 {
     $clock = new FrozenClock;
-    $store ??= new InMemoryAttemptStore;
+    $store = new InMemoryAttemptStore;
+    $backend = $failing ?? $store;
     $hooks = new RecordingHooks;
     $policy = new ThrottlePolicy(
         3600,
@@ -68,14 +69,14 @@ function throttleGuard(array $allowlist = [], array $trustedProxies = [], ?Attem
 
     // The guard keeps per-request state (the resolved address, a refusal), so
     // each simulated request gets a guard of its own on the shared store.
-    $GLOBALS['portcullis_throttle_request'] = static function () use ($settings, $store, $policy, $clock, $notifier, $hooks): LoginThrottleGuard {
+    $GLOBALS['portcullis_throttle_request'] = static function () use ($settings, $backend, $policy, $clock, $notifier, $hooks): LoginThrottleGuard {
         Wp::$hooks = [];
 
         $guard = new LoginThrottleGuard(
             $settings,
-            new CheckLockout($store, $clock),
-            new RecordFailedAttempt($store, $policy, $clock),
-            new ClearAttempts($store),
+            new CheckLockout($backend, $clock),
+            new RecordFailedAttempt($backend, $policy, $clock),
+            new ClearAttempts($backend),
             new DeriveSubjects(THROTTLE_SECRET),
             new ResolveClientIp,
             new SuperglobalClientAddress,
@@ -202,7 +203,7 @@ it('does not touch a successful login of an address that is not locked out', fun
 
 it('does not count or look up an empty form', function (): void {
     $store = new ExplodingAttemptStore;
-    throttleGuard(store: $store);
+    throttleGuard(failing: $store);
 
     $error = new WP_Error('empty_username', 'empty');
 
@@ -380,7 +381,7 @@ it('keeps authenticating when the store is down, and reports it once', function 
     $log = tempnam(sys_get_temp_dir(), 'portcullis-log');
     $previous = ini_set('error_log', $log);
     $store = new ExplodingAttemptStore;
-    throttleGuard(store: $store);
+    throttleGuard(failing: $store);
 
     $first = attemptLogin('admin');
     $second = attemptLogin('admin');
@@ -474,7 +475,7 @@ it('does not clear anything on wp_login without a user object', function (): voi
 it('survives a store failure while clearing', function (): void {
     $log = tempnam(sys_get_temp_dir(), 'portcullis-log');
     $previous = ini_set('error_log', $log);
-    throttleGuard(store: new ExplodingAttemptStore);
+    throttleGuard(failing: new ExplodingAttemptStore);
 
     do_action('wp_login', 'jane', new WP_User(9, 'jane', 'jane'));
 
@@ -507,7 +508,7 @@ it('leaves Basic Auth alone when the address is not locked out', function (): vo
 
 it('does not look anything up for an already authenticated request or without Basic Auth', function (): void {
     $store = new ExplodingAttemptStore;
-    throttleGuard(store: $store);
+    throttleGuard(failing: $store);
 
     expect(apply_filters('determine_current_user', 5))->toBe(5);
 

@@ -75,7 +75,7 @@ it('answers wp-login.php with a 404, logged in or not', function (bool $loggedIn
     expect($this->notFound->prepared)->toBeTrue()
         ->and($this->screen->prepared)->toBeNull()
         ->and(fn () => do_action('wp_loaded'))->toThrow(ResponseSent::class, '404');
-})->with([false, true]);
+})->with([[false], [true]]);
 
 it('answers wp-admin with a 404 for anonymous visitors only', function (): void {
     $context = new FakeRequestContext(uri: '/wp-admin/', endpoint: DefaultEndpoint::Admin);
