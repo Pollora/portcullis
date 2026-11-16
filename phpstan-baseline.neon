@@ -1,0 +1,7 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Found usage of constant DOING_CRON\. Use wp_doing_cron\(\) instead\.$#'
+			identifier: phpstanWP.wpConstant.fetch
+			count: 1
+			path: src/Adapter/Out/WordPress/SuperglobalRequestContext.php
