@@ -283,6 +283,6 @@ final class WpdbAttemptStore implements AttemptStorePort
             $this->ready = false;
         }
 
-        throw new RuntimeException('[portcullis] '.$error);
+        throw StorageException::query($error);
     }
 }

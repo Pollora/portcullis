@@ -98,7 +98,7 @@ final class WpdbSchema
         $error = $this->lastInstallError();
 
         if ($error !== null) {
-            throw new RuntimeException($error);
+            throw StorageException::schema($error);
         }
 
         $this->install();
@@ -132,7 +132,7 @@ final class WpdbSchema
             set_site_transient($this->errorTransient(), $error, self::RETRY_DELAY);
             error_log('[portcullis] '.$error);
 
-            throw new RuntimeException($error);
+            throw StorageException::schema($error);
         }
 
         if (is_multisite()) {

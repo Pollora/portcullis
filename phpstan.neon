@@ -1,3 +1,8 @@
+includes:
+    - vendor/pollora/harness/presets/phpstan/base.neon
+    # One entry: the DOING_CRON fallback of SuperglobalRequestContext, behind a function_exists() check.
+    - phpstan-baseline.neon
+
 parameters:
     level: 5
     paths:
@@ -23,8 +28,7 @@ parameters:
         - '#Cannot access offset .+ on mixed#'
         # Pollora and Laravel are optional integrations, resolved at runtime by
         # PolloraHookRegistrar::isAvailable(). Requiring the framework just to
-        # analyse the adapter would drag in Laravel and raise the package's PHP
-        # floor from 8.1 to 8.3.
+        # analyse the adapter would drag in Laravel.
         - '#unknown class (Pollora\\Support\\Facades|Illuminate\\Support\\Facades)\\[A-Za-z]+#'
         - '#Class (Pollora\\Support\\Facades|Illuminate\\Support\\Facades)\\[A-Za-z]+ not found#'
         # Pest.php issues

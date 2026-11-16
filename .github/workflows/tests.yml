@@ -13,10 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The runtime floor is PHP 8.1, but the test tooling cannot go that low:
-        # Pest 2.36+ and its paratest dependency require 8.2. The dedicated
-        # php-floor-compatibility job below covers the floor instead.
-        php: ['8.2', '8.3', '8.4']
+        php: ['8.3', '8.4']
         stability: [prefer-stable]
 
     name: PHP ${{ matrix.php }} - ${{ matrix.stability }}
@@ -37,34 +34,6 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/pest --testsuite=Unit
-
-  php-floor-compatibility:
-    runs-on: ubuntu-latest
-    name: PHP 8.1 - installable and parseable
-
-    # The package declares php >=8.1 and must stay installable on sites that
-    # have not moved past it. Its own test suite cannot run there, so this job
-    # checks what actually reaches a consumer on the floor: that the manifest is
-    # sound and that every shipped file parses. Nothing is installed on purpose
-    # — the package has no runtime dependency beyond PHP itself, and even
-    # `composer update --no-dev` would resolve the dev requirements to write a
-    # lock, which is exactly what 8.1 cannot satisfy.
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-          extensions: dom, curl, libxml, mbstring, zip
-          coverage: none
-
-      - name: Validate the manifest
-        run: composer validate --strict --no-check-publish
-
-      - name: Lint every shipped file
-        run: find src bootstrap.php -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
 
   static-analysis:
     runs-on: ubuntu-latest

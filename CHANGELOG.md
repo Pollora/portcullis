@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Requires PHP 8.3 or later (was 8.1), the floor of the Pollora quality harness
+  the package now adopts. The test and static analysis tooling already needed 8.2.
+
 ## 2.1.0 — 2026-11-06
 
 ### Added
