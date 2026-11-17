@@ -34,6 +34,12 @@ function bootWith(array $overrides = []): RecordingHooks
 {
     $hooks = new RecordingHooks;
 
+    // PHPUnit 12 redirects error_log() while a test runs, after beforeEach: point it at the test's own log again.
+    $log = $GLOBALS['portcullis_test_log'] ?? null;
+    if (is_string($log)) {
+        ini_set('error_log', $log);
+    }
+
     Portcullis::boot(...array_merge([
         'slugProvider' => new InMemorySlugProvider(null),
         'toggle' => bootToggle(true),
@@ -103,11 +109,13 @@ beforeEach(function (): void {
     resetBoot();
     $this->log = tempnam(sys_get_temp_dir(), 'portcullis-log');
     $this->previousLog = ini_set('error_log', $this->log);
+    $GLOBALS['portcullis_test_log'] = $this->log;
 });
 
 afterEach(function (): void {
     resetBoot();
     ini_set('error_log', (string) $this->previousLog);
+    unset($GLOBALS['portcullis_test_log']);
     @unlink($this->log);
 });
 
