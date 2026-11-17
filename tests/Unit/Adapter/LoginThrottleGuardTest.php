@@ -696,7 +696,7 @@ it('settles on the longest of the lockouts one failure triggers', function (): v
     $error = attemptLogin('bob');
 
     expect($error->get_error_code())->toBe(LoginThrottleGuard::ERROR_CODE)
-        ->and($error->get_error_message())->toContain('2 hours');
+        ->and($error->get_error_message())->toEndWith('Please try again in 2 hours.');
 });
 
 it('resolves the client address once per request', function (): void {
