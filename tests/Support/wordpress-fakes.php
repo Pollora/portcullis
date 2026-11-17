@@ -323,7 +323,7 @@ if (! function_exists('site_url')) {
 if (! function_exists('network_home_url')) {
     function network_home_url($path = '', $scheme = null)
     {
-        return wpFakeUrl(Wp::$home, $path, $scheme);
+        return wpFakeUrl(Wp::$networkHome ?? Wp::$home, $path, $scheme);
     }
 }
 
@@ -359,6 +359,7 @@ if (! function_exists('update_option')) {
     function update_option($option, $value, $autoload = null)
     {
         Wp::$options[$option] = $value;
+        Wp::$autoload[$option] = $autoload;
 
         return true;
     }
@@ -551,6 +552,11 @@ if (! function_exists('get_page_by_path')) {
 if (! function_exists('get_post_types')) {
     function get_post_types($args = [], $output = 'names', $operator = 'and')
     {
+        // Only the public post types are known to the fake installation.
+        if (($args['public'] ?? null) !== true) {
+            return [];
+        }
+
         return array_combine(Wp::$publicPostTypes, Wp::$publicPostTypes);
     }
 }

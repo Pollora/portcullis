@@ -12,6 +12,12 @@ parameters:
     excludePaths:
         - vendor/*
     ignoreErrors:
+        # Pest binds each test to its TestCase: the properties `beforeEach` sets and a
+        # test reads through `$this` are only known at run time. Tests only.
+        -
+            identifier: property.notFound
+            message: '#Access to an undefined property PHPUnit\\Framework\\TestCase::\$[a-zA-Z0-9_]+\.#'
+            path: tests
         # WordPress core functions and constants are only available at runtime,
         # inside a booted WordPress installation. The package deliberately ships
         # without WordPress stubs so that the Domain and Application layers stay

@@ -260,3 +260,22 @@ describe('AccountIdentifier', function (): void {
         expect((new AccountIdentifier)->forLogin('   '))->toBe('');
     });
 });
+
+describe('guards, the cases that look alike', function (): void {
+    it('lets a canonical archive with posts through under pretty permalinks too', function (): void {
+        (new AuthorArchiveGuard(new ConcealAuthorArchive(AuthorArchivePolicy::PublicWithPosts), new WordPressHookRegistrar))->register();
+        $GLOBALS['wp_rewrite'] = new WP_Rewrite(true);
+        $query = new WP_Query(author: true, vars: ['author_name' => 'jane']);
+        $query->post_count = 5;
+
+        expect(apply_filters('pre_handle_404', false, $query))->toBeFalse()
+            ->and($query->set404)->toBeFalse();
+    });
+
+    it('hands back a comment class list that is not a list, even for a known author', function (): void {
+        (new AccountEnumerationGuard(new RemoveAccountRoutes, new RemoveCommentAuthorClass, new RemoveOembedAuthor, new WordPressHookRegistrar))->register();
+        Wp::$usersById[7] = new WP_User(7, 'jane', 'jane');
+
+        expect(apply_filters('comment_class', 'not-an-array', '', 1, new WP_Comment(7)))->toBe('not-an-array');
+    });
+});

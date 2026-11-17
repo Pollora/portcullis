@@ -48,6 +48,9 @@ final class Wp
 
     public static string $site = 'https://example.test/wp';
 
+    /** @var string|null Home of the network, the home of the site when null. */
+    public static ?string $networkHome = null;
+
     /** @var array<string, \WP_User> */
     public static array $usersByLogin = [];
 
@@ -80,6 +83,9 @@ final class Wp
     /** @var list<string> */
     public static array $dbDelta = [];
 
+    /** @var array<string, mixed> Autoload flag passed along with each option written by update_option(). */
+    public static array $autoload = [];
+
     public static function reset(): void
     {
         self::$hooks = [];
@@ -96,6 +102,7 @@ final class Wp
         self::$onHomeUrl = null;
         self::$home = 'https://example.test';
         self::$site = 'https://example.test/wp';
+        self::$networkHome = null;
         self::$usersByLogin = [];
         self::$usersByEmail = [];
         self::$usersById = [];
@@ -107,6 +114,7 @@ final class Wp
         self::$pageLookups = [];
         self::$publicPostTypes = ['post', 'page'];
         self::$dbDelta = [];
+        self::$autoload = [];
 
         unset($GLOBALS['pagenow'], $GLOBALS['wp_rewrite'], $GLOBALS['wpdb']);
     }
