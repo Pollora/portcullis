@@ -730,3 +730,15 @@ it('reports a store that fails while recording a failure, or clearing an account
     'a failure' => ['wp_login_failed', ['admin', new WP_Error('incorrect_password', 'x')]],
     'a successful login' => ['wp_login', ['admin', new WP_User(1, 'admin', 'admin')]],
 ]);
+
+it('resolves an account by its login first, and by its email address only when that finds nobody', function (): void {
+    $accounts = new AccountIdentifier;
+    Wp::$usersByLogin['jane@example.test'] = new WP_User(5, 'jane@example.test', 'jane');
+    Wp::$usersByEmail['jane@example.test'] = new WP_User(9, 'jane9', 'jane9');
+    Wp::$usersByEmail['bob@example.test'] = new WP_User(7, 'bob', 'bob');
+
+    expect($accounts->forLogin('jane@example.test'))->toBe('user:5')
+        ->and($accounts->forLogin('bob@example.test'))->toBe('user:7')
+        ->and($accounts->forLogin('ghost@example.test'))->toBe('login:ghost@example.test')
+        ->and($accounts->forLogin('ghost'))->toBe('login:ghost');
+});

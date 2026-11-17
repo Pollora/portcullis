@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Pollora\Portcullis\Domain\Model\AuthorArchivePolicy;
+use Pollora\Portcullis\Domain\Model\FeatureState;
 use Pollora\Portcullis\Domain\Model\ScopePolicy;
 use Pollora\Portcullis\Domain\Model\ThrottlePolicy;
 use Pollora\Portcullis\Domain\Model\ThrottleSettings;
@@ -49,9 +50,9 @@ function bootEverything(AuthorArchivePolicy $archives): void
 
     $toggle = new class implements FeatureTogglePort
     {
-        public function state(): Pollora\Portcullis\Domain\Model\FeatureState
+        public function state(): FeatureState
         {
-            return Pollora\Portcullis\Domain\Model\FeatureState::Enabled;
+            return FeatureState::Enabled;
         }
     };
 

@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use Pollora\Portcullis\Adapter\In\WordPress\SlugCollisionNotice;
+use Pollora\Portcullis\Adapter\In\WordPress\StorageHealthNotice;
+use Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar;
 use Pollora\Portcullis\Adapter\Out\WordPress\WpdbAttemptStore;
 use Pollora\Portcullis\Adapter\Out\WordPress\WpdbSchema;
+use Pollora\Portcullis\Domain\Model\LoginSlug;
 use Pollora\Portcullis\Domain\Model\Subject;
 use Pollora\Portcullis\Domain\Model\SubjectScope;
 use Pollora\Portcullis\Tests\Support\Wp;
@@ -160,7 +164,7 @@ describe('notices', function (): void {
         Wp::$capabilities = ['manage_options'];
 
         ob_start();
-        (new Pollora\Portcullis\Adapter\In\WordPress\StorageHealthNotice(new WpdbSchema(new wpdb), new Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar))->render();
+        (new StorageHealthNotice(new WpdbSchema(new wpdb), new WordPressHookRegistrar))->render();
         $html = (string) ob_get_clean();
 
         expect($html)->toContain('wait 15 minutes for the next automatic attempt');
@@ -171,7 +175,7 @@ describe('notices', function (): void {
         Wp::$publicPostTypes = ['post', 'page', 'product'];
 
         ob_start();
-        (new Pollora\Portcullis\Adapter\In\WordPress\SlugCollisionNotice(Pollora\Portcullis\Domain\Model\LoginSlug::fromString('acces-secret'), new Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar))->render();
+        (new SlugCollisionNotice(LoginSlug::fromString('acces-secret'), new WordPressHookRegistrar))->render();
         ob_end_clean();
 
         expect(Wp::$pageLookups[0][2])->toBe(['post', 'page', 'product']);

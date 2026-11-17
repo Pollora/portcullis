@@ -372,3 +372,79 @@ describe('registration', function (): void {
         expect(WP_CLI::$commands)->toBe([]);
     });
 });
+
+describe('output, line by line', function (): void {
+    it('prints the whole status, with a blank line between the three parts', function (): void {
+        Wp::$options[WpdbSchema::VERSION_OPTION] = WpdbSchema::VERSION;
+
+        cliCommand('acces-secret', schema: new WpdbSchema(new wpdb))['command']->status();
+
+        expect(WP_CLI::$lines)->toBe([
+            'Hidden login: active.',
+            'Login URL:    https://example.test/acces-secret',
+            'wp-login.php: 404 for everyone.',
+            'wp-admin/:    404 for anonymous visitors, untouched once authenticated.',
+            '',
+            'Brute-force protection: active.',
+            'Per address:  4 failures lock out for 20 mins; lockout #4 lasts 24 hours.',
+            'Per account:  20 failures, all addresses combined, lock out for 20 mins.',
+            'Counters kept: 24 hours after the last failure.',
+            'Trusted proxies: none (REMOTE_ADDR is used)',
+            'Allowlist:    none',
+            'Login errors: generic',
+            'Storage:      table wp_portcullis_attempts',
+            '',
+            'Account enumeration protection: active.',
+            '/wp/v2/users:    removed for users who cannot list accounts.',
+            'Author archives: public when they list posts; 404 otherwise, and for ?author=<id>.',
+        ]);
+    });
+
+    it('lists every lockout with its remaining time, by default up to fifty', function (): void {
+        ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
+        foreach (range(1, 51) as $i) {
+            lockOut($store, $subjects->forIp(ClientIp::tryFromString('203.0.113.'.$i)), $clock->now() + 600);
+        }
+
+        $command->lockouts([], []);
+
+        expect(WP_CLI::$tables[0]['items'])->toHaveCount(50)
+            ->and(WP_CLI::$tables[0]['items'][0])->toBe([
+                'scope' => SubjectScope::Ip->label(),
+                'key' => WP_CLI::$tables[0]['items'][0]['key'],
+                'locked_until' => '2023-11-14 22:23:20 UTC',
+                'remaining' => '10 mins',
+            ]);
+    });
+
+    it('lists at least one lockout, whatever limit it is given', function (string $limit, int $expected): void {
+        ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
+        foreach (['203.0.113.1', '203.0.113.2', '203.0.113.3'] as $address) {
+            lockOut($store, $subjects->forIp(ClientIp::tryFromString($address)), $clock->now() + 600);
+        }
+
+        $command->lockouts([], ['limit' => $limit]);
+
+        expect(WP_CLI::$tables[0]['items'])->toHaveCount($expected);
+    })->with([['0', 1], ['-5', 1], ['1', 1], ['3', 3]]);
+
+    it('forgets an account by the key it shows in the account scope', function (): void {
+        ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
+        $account = $subjects->forAccount('login:ghost');
+        lockOut($store, $account, $clock->now() + 600);
+
+        $command->unlock([$account->hexKey()]);
+
+        expect($store->lockedUntil([$account], $clock->now()))->toBeNull();
+    });
+
+    it('stops as soon as one of the three throttle services is missing', function (array $services): void {
+        $command = new PortcullisCommand(new InMemorySlugProvider(null), cliSettings(), ...$services);
+
+        expect(fn () => $command->unlock(['203.0.113.9']))->toThrow(CliHalt::class, 'Brute-force protection is disabled.');
+    })->with([
+        'no store' => [['subjects' => new DeriveSubjects(CLI_SECRET), 'clock' => new FrozenClock]],
+        'no subjects' => [['store' => new InMemoryAttemptStore, 'clock' => new FrozenClock]],
+        'no clock' => [['store' => new InMemoryAttemptStore, 'subjects' => new DeriveSubjects(CLI_SECRET)]],
+    ]);
+});

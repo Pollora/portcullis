@@ -154,8 +154,9 @@ it('keeps WordPress\' stock login and reports it when the slug is rejected', fun
     bootWith(['slugProvider' => new InMemorySlugProvider('wp-admin')]);
 
     expect(hasHooks('plugins_loaded', 'site_url'))->toBeFalse()
-        ->and((string) file_get_contents($this->log))->toContain('[portcullis]')
-        ->and(Wp::callbacks('admin_notices'))->toHaveCount(1);
+        ->and((string) file_get_contents($this->log))->toContain('[portcullis] The login slug "wp-admin" is reserved')
+        ->and(Wp::$hooks['admin_notices'][10])->toHaveCount(1)
+        ->and(Wp::$hooks['admin_notices'][10][0][1])->toBe(0);
 
     Wp::$capabilities = ['manage_options'];
     ob_start();
@@ -272,4 +273,26 @@ it('boots on the default adapters, reading its configuration from the environmen
 
     expect(hasHooks('authenticate', 'rest_endpoints', 'pre_handle_404'))->toBeTrue()
         ->and(hasHooks('plugins_loaded'))->toBeFalse();
+});
+
+it('keeps the generic login errors on when it falls back to the default thresholds', function (): void {
+    $settings = bootThrottle(true, static fn (): ThrottleSettings => throw InvalidThrottlePolicyException::notAnInteger('PORTCULLIS_MAX_RETRIES', 'many'));
+
+    bootWith(['throttleSettings' => $settings]);
+
+    expect(hasHooks('wp_login_errors'))->toBeTrue();
+});
+
+it('does not trust a $wpdb that is not one', function (): void {
+    $GLOBALS['wpdb'] = new stdClass;
+
+    bootWith(['throttleSettings' => bootThrottle(true), 'store' => null]);
+
+    expect(hasHooks('authenticate'))->toBeFalse();
+});
+
+it('registers through the hook system it is given', function (): void {
+    $hooks = bootWith(['slugProvider' => new InMemorySlugProvider('acces-secret')]);
+
+    expect($hooks->removedCallback('template_redirect', 'wp_redirect_admin_locations'))->toBeTrue();
 });
