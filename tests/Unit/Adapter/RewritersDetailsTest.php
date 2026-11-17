@@ -24,13 +24,13 @@ describe('LoginUrlRewriter, which home it builds on', function (): void {
         Wp::$multisite = $multisite;
 
         expect($this->rewriter->filterSiteUrl($this->login, 'wp-login.php'))->toBe('https://site.test/acces-secret');
-    })->with([false, true]);
+    })->with([[false], [true]]);
 
     it('builds a redirect on the home of the site, also on a network', function (bool $multisite): void {
         Wp::$multisite = $multisite;
 
         expect($this->rewriter->filterRedirect('wp-login.php?checkemail=confirm'))->toBe('https://site.test/acces-secret?checkemail=confirm');
-    })->with([false, true]);
+    })->with([[false], [true]]);
 
     it('builds a network URL on the home of the network, only on a network', function (): void {
         Wp::$multisite = true;
