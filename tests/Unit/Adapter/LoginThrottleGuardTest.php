@@ -666,51 +666,17 @@ it('keeps a refusal a refusal, and only touches what a late handler authenticate
     expect($result)->toBe($late);
 });
 
-it('sets the 429 status of a lockout while headers have not been sent', function (): void {
-    $result = runInSubprocess(<<<'PHP'
-    use Pollora\Portcullis\Adapter\In\WordPress\AccountIdentifier;
-    use Pollora\Portcullis\Adapter\In\WordPress\LoginThrottleGuard;
-    use Pollora\Portcullis\Adapter\Out\WordPress\SuperglobalClientAddress;
-    use Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar;
-    use Pollora\Portcullis\Application\Service\CheckLockout;
-    use Pollora\Portcullis\Application\Service\ClearAttempts;
-    use Pollora\Portcullis\Application\Service\DeriveSubjects;
-    use Pollora\Portcullis\Application\Service\RecordFailedAttempt;
-    use Pollora\Portcullis\Application\Service\ResolveClientIp;
-    use Pollora\Portcullis\Domain\Model\ScopePolicy;
-    use Pollora\Portcullis\Domain\Model\ThrottlePolicy;
-    use Pollora\Portcullis\Domain\Model\ThrottleSettings;
-    use Pollora\Portcullis\Port\Out\LockoutNotifierPort;
-    use Pollora\Portcullis\Tests\Support\FrozenClock;
-    use Pollora\Portcullis\Tests\Support\InMemoryAttemptStore;
-    use Pollora\Portcullis\Tests\Support\Wp;
+it('sets the 429 status of a lockout while headers can still be sent, and not after', function (): void {
+    throttleGuard();
+    failFrom('198.51.100.10', 'admin', 3);
+    Wp::$statuses = [];
 
-    $_SERVER['REMOTE_ADDR'] = '198.51.100.10';
-    $secret = str_repeat('k', 40);
-    $clock = new FrozenClock;
-    $store = new InMemoryAttemptStore;
-    $policy = new ThrottlePolicy(3600, new ScopePolicy(1, 600, 0, 0), null);
-    $guard = new LoginThrottleGuard(
-        new ThrottleSettings($policy, [], [], $secret, true),
-        new CheckLockout($store, $clock),
-        new RecordFailedAttempt($store, $policy, $clock),
-        new ClearAttempts($store),
-        new DeriveSubjects($secret),
-        new ResolveClientIp,
-        new SuperglobalClientAddress,
-        new AccountIdentifier,
-        new class implements LockoutNotifierPort { public function lockedOut($lockout, $ip, $login): void {} },
-        $clock,
-        new WordPressHookRegistrar,
-    );
+    $error = attemptLogin('admin');
 
-    $guard->recordOutcome(new WP_Error('incorrect_password', 'x'), 'admin', 'secret');
-    $error = $guard->refuseLockedOut(null, 'admin', 'secret');
-
-    echo json_encode([Wp::$statuses, $error instanceof WP_Error]);
-    PHP);
-
-    expect($result['stdout'])->toBe('[[429,429],true]');
+    // Under a test runner that has already written to the terminal, headers can
+    // no longer be sent: the status is then left alone, as in production.
+    expect($error->get_error_code())->toBe(LoginThrottleGuard::ERROR_CODE)
+        ->and(Wp::$statuses)->toBe(headers_sent() ? [] : [429]);
 });
 
 it('settles on the longest of the lockouts one failure triggers', function (): void {

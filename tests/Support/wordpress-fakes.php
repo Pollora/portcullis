@@ -323,7 +323,7 @@ if (! function_exists('site_url')) {
 if (! function_exists('network_home_url')) {
     function network_home_url($path = '', $scheme = null)
     {
-        return wpFakeUrl(Wp::$home, $path, $scheme);
+        return wpFakeUrl(Wp::$networkHome ?? Wp::$home, $path, $scheme);
     }
 }
 
