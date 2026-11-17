@@ -539,7 +539,7 @@ it('counts a failed application password without an error object, and without a 
 
     // No Basic Auth login: only the address is counted, and the account scope
     // gets the empty identifier.
-    expect($store->count())->toBeGreaterThanOrEqual(1);
+    expect($store->count())->toBe(1);
 });
 
 it('ignores an application password error that is not a credential failure', function (): void {
@@ -570,3 +570,197 @@ it('lets the host reword the lockout message, and falls back to an empty one on 
 
     expect(attemptLogin('admin')->get_error_message())->toBe('');
 });
+
+/**
+ * Failures recorded in the store, all counters together.
+ */
+function recordedFailures(InMemoryAttemptStore $store): int
+{
+    $rows = (new ReflectionProperty($store, 'rows'))->getValue($store);
+
+    return array_sum(array_column($rows, 'failures'));
+}
+
+it('counts a login that is not a string as an empty one, which is no account', function (): void {
+    ['store' => $store, 'notified' => $notified] = throttleGuard();
+
+    apply_filters('authenticate', new WP_Error('incorrect_password', 'x'), null, 'secret');
+
+    expect($store->count())->toBe(1)
+        ->and($notified)->toHaveCount(0);
+
+    newRequest();
+    do_action('wp_login_failed', null, new WP_Error('incorrect_password', 'x'));
+
+    expect($store->count())->toBe(1);
+});
+
+it('reports an empty login to the notifier when the lockout comes from a login that is not a string', function (): void {
+    ['notified' => $notified] = throttleGuard();
+    failFrom('198.51.100.10', 'u1', 2);
+
+    apply_filters('authenticate', new WP_Error('incorrect_password', 'x'), null, 'secret');
+
+    expect($notified)->toHaveCount(1)
+        ->and($notified[0][2])->toBe('');
+
+    $_SERVER['REMOTE_ADDR'] = '198.51.100.11';
+    failFrom('198.51.100.11', 'u2', 2);
+    do_action('wp_login_failed', null, new WP_Error('incorrect_password', 'x'));
+
+    expect($notified)->toHaveCount(2)
+        ->and($notified[1][2])->toBe('');
+
+    $_SERVER['REMOTE_ADDR'] = '198.51.100.12';
+    failFrom('198.51.100.12', 'u3', 2);
+    do_action('application_password_failed_authentication', new WP_Error('incorrect_password', 'x'));
+
+    expect($notified)->toHaveCount(3)
+        ->and($notified[2][2])->toBe('');
+});
+
+it('does not count the same failure twice when it comes through authenticate and an application password', function (): void {
+    ['store' => $store] = throttleGuard();
+    $_SERVER['PHP_AUTH_USER'] = 'admin';
+
+    attemptLogin('admin');
+    $afterLogin = recordedFailures($store);
+    do_action('application_password_failed_authentication', new WP_Error('incorrect_password', 'x'));
+
+    expect($afterLogin)->toBe(2)
+        ->and(recordedFailures($store))->toBe(2);
+});
+
+it('does not count an application password failure of a request it already refused', function (): void {
+    ['store' => $store] = throttleGuard();
+    failFrom('198.51.100.10', 'admin', 3);
+    $_SERVER['PHP_AUTH_USER'] = 'admin';
+    apply_filters('determine_current_user', false);
+    $before = recordedFailures($store);
+
+    do_action('application_password_failed_authentication', new WP_Error('incorrect_password', 'x'));
+    do_action('wp_login_failed', 'admin', new WP_Error('incorrect_password', 'x'));
+
+    expect(recordedFailures($store))->toBe($before);
+});
+
+it('removes the application password check at its own priority', function (): void {
+    ['hooks' => $hooks] = throttleGuard();
+    failFrom('198.51.100.10', 'admin', 3);
+    $_SERVER['PHP_AUTH_USER'] = 'admin';
+
+    apply_filters('determine_current_user', false);
+
+    expect($hooks->removed)->toContain(['determine_current_user', 'wp_validate_application_password', 20]);
+});
+
+it('keeps a refusal a refusal, and only touches what a late handler authenticated', function (): void {
+    throttleGuard();
+    failFrom('198.51.100.10', 'admin', 3);
+    $late = new WP_Error('sso_failed', 'no');
+    add_filter('authenticate', static fn () => $late, 20, 3);
+
+    // A late handler that does not authenticate anyone leaves its own error alone.
+    $result = apply_filters('authenticate', null, 'admin', 'secret');
+
+    expect($result)->toBe($late);
+});
+
+it('sets the 429 status of a lockout while headers have not been sent', function (): void {
+    $result = runInSubprocess(<<<'PHP'
+    use Pollora\Portcullis\Adapter\In\WordPress\AccountIdentifier;
+    use Pollora\Portcullis\Adapter\In\WordPress\LoginThrottleGuard;
+    use Pollora\Portcullis\Adapter\Out\WordPress\SuperglobalClientAddress;
+    use Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar;
+    use Pollora\Portcullis\Application\Service\CheckLockout;
+    use Pollora\Portcullis\Application\Service\ClearAttempts;
+    use Pollora\Portcullis\Application\Service\DeriveSubjects;
+    use Pollora\Portcullis\Application\Service\RecordFailedAttempt;
+    use Pollora\Portcullis\Application\Service\ResolveClientIp;
+    use Pollora\Portcullis\Domain\Model\ScopePolicy;
+    use Pollora\Portcullis\Domain\Model\ThrottlePolicy;
+    use Pollora\Portcullis\Domain\Model\ThrottleSettings;
+    use Pollora\Portcullis\Port\Out\LockoutNotifierPort;
+    use Pollora\Portcullis\Tests\Support\FrozenClock;
+    use Pollora\Portcullis\Tests\Support\InMemoryAttemptStore;
+    use Pollora\Portcullis\Tests\Support\Wp;
+
+    $_SERVER['REMOTE_ADDR'] = '198.51.100.10';
+    $secret = str_repeat('k', 40);
+    $clock = new FrozenClock;
+    $store = new InMemoryAttemptStore;
+    $policy = new ThrottlePolicy(3600, new ScopePolicy(1, 600, 0, 0), null);
+    $guard = new LoginThrottleGuard(
+        new ThrottleSettings($policy, [], [], $secret, true),
+        new CheckLockout($store, $clock),
+        new RecordFailedAttempt($store, $policy, $clock),
+        new ClearAttempts($store),
+        new DeriveSubjects($secret),
+        new ResolveClientIp,
+        new SuperglobalClientAddress,
+        new AccountIdentifier,
+        new class implements LockoutNotifierPort { public function lockedOut($lockout, $ip, $login): void {} },
+        $clock,
+        new WordPressHookRegistrar,
+    );
+
+    $guard->recordOutcome(new WP_Error('incorrect_password', 'x'), 'admin', 'secret');
+    $error = $guard->refuseLockedOut(null, 'admin', 'secret');
+
+    echo json_encode([Wp::$statuses, $error instanceof WP_Error]);
+    PHP);
+
+    expect($result['stdout'])->toBe('[[429,429],true]');
+});
+
+it('settles on the longest of the lockouts one failure triggers', function (): void {
+    ['clock' => $clock] = throttleGuard();
+
+    // Address A is locked once: its next lockout is a long one (2 hours).
+    failFrom('198.51.100.10', 'bob', 3);
+    $clock->advance(700);
+    failFrom('198.51.100.10', 'carol', 2);
+    // Address B brings the account of bob to four failures.
+    failFrom('198.51.100.11', 'bob', 1);
+
+    // One more failure of bob from A: A reaches 3 (long lockout, 2 hours) and
+    // bob reaches 5 (15 minutes), in the same call, the address first.
+    $_SERVER['REMOTE_ADDR'] = '198.51.100.10';
+    newRequest();
+    $error = attemptLogin('bob');
+
+    expect($error->get_error_code())->toBe(LoginThrottleGuard::ERROR_CODE)
+        ->and($error->get_error_message())->toContain('2 hours');
+});
+
+it('resolves the client address once per request', function (): void {
+    throttleGuard();
+    failFrom('198.51.100.10', 'admin', 3);
+    $_SERVER['REMOTE_ADDR'] = '198.51.100.10';
+    $guard = newRequest();
+
+    $first = $guard->refuseLockedOut(null, 'admin', 'secret');
+    $_SERVER['REMOTE_ADDR'] = '203.0.113.200';
+    $second = $guard->refuseLockedOut(null, 'admin', 'secret');
+
+    expect($first)->toBeInstanceOf(WP_Error::class)
+        ->and($second)->toBeInstanceOf(WP_Error::class);
+});
+
+it('reports a store that fails while recording a failure, or clearing an account', function (string $hook, array $arguments): void {
+    $log = tempnam(sys_get_temp_dir(), 'portcullis-log');
+    $previous = ini_set('error_log', $log);
+    throttleGuard(failing: new ExplodingAttemptStore);
+    ini_set('error_log', $log);
+
+    do_action($hook, ...$arguments);
+
+    $logged = (string) file_get_contents($log);
+    ini_set('error_log', (string) $previous);
+    unlink($log);
+
+    expect($logged)->toContain('[portcullis] brute-force protection skipped for this request: [portcullis] connection refused');
+})->with([
+    'a failure' => ['wp_login_failed', ['admin', new WP_Error('incorrect_password', 'x')]],
+    'a successful login' => ['wp_login', ['admin', new WP_User(1, 'admin', 'admin')]],
+]);

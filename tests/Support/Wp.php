@@ -80,6 +80,9 @@ final class Wp
     /** @var list<string> */
     public static array $dbDelta = [];
 
+    /** @var array<string, mixed> Autoload flag passed along with each option written by update_option(). */
+    public static array $autoload = [];
+
     public static function reset(): void
     {
         self::$hooks = [];
@@ -107,6 +110,7 @@ final class Wp
         self::$pageLookups = [];
         self::$publicPostTypes = ['post', 'page'];
         self::$dbDelta = [];
+        self::$autoload = [];
 
         unset($GLOBALS['pagenow'], $GLOBALS['wp_rewrite'], $GLOBALS['wpdb']);
     }
