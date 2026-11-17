@@ -658,7 +658,7 @@ it('keeps a refusal a refusal, and only touches what a late handler authenticate
     throttleGuard();
     failFrom('198.51.100.10', 'admin', 3);
     $late = new WP_Error('sso_failed', 'no');
-    add_filter('authenticate', static fn () => $late, 20, 3);
+    add_filter('authenticate', static fn (mixed ...$arguments) => $late, 20, 3);
 
     // A late handler that does not authenticate anyone leaves its own error alone.
     $result = apply_filters('authenticate', null, 'admin', 'secret');
@@ -746,7 +746,7 @@ it('resolves an account by its login first, and by its email address only when t
 it('turns a user that a late handler authenticated into a refusal, after refusing the attempt', function (): void {
     throttleGuard();
     failFrom('198.51.100.10', 'admin', 3);
-    add_filter('authenticate', static fn () => new WP_User(7, 'sso', 'sso'), 20, 3);
+    add_filter('authenticate', static fn (mixed ...$arguments) => new WP_User(7, 'sso', 'sso'), 20, 3);
 
     $result = apply_filters('authenticate', null, 'admin', 'secret');
 

@@ -91,6 +91,7 @@ describe('WpdbAttemptStore details', function (): void {
             'clear' => $store->clear([$subject]),
             'purgeExpired' => $store->purgeExpired(1, 1),
             'activeLockouts' => $store->activeLockouts(1, 1),
+            default => throw new LogicException($operation),
         };
 
         expect(Wp::$dbDelta)->toHaveCount(1);
