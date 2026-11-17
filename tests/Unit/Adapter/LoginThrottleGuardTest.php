@@ -742,3 +742,30 @@ it('resolves an account by its login first, and by its email address only when t
         ->and($accounts->forLogin('ghost@example.test'))->toBe('login:ghost@example.test')
         ->and($accounts->forLogin('ghost'))->toBe('login:ghost');
 });
+
+it('turns a user that a late handler authenticated into a refusal, after refusing the attempt', function (): void {
+    throttleGuard();
+    failFrom('198.51.100.10', 'admin', 3);
+    add_filter('authenticate', static fn () => new WP_User(7, 'sso', 'sso'), 20, 3);
+
+    $result = apply_filters('authenticate', null, 'admin', 'secret');
+
+    expect($result)->toBeInstanceOf(WP_Error::class)
+        ->and($result->get_error_code())->toBe(LoginThrottleGuard::ERROR_CODE);
+});
+
+it('reports a store that fails while looking a lockout up, even if nothing is recorded after', function (): void {
+    $log = tempnam(sys_get_temp_dir(), 'portcullis-log');
+    $previous = ini_set('error_log', $log);
+    throttleGuard(failing: new ExplodingAttemptStore);
+    ini_set('error_log', $log);
+    $_SERVER['PHP_AUTH_USER'] = 'admin';
+
+    apply_filters('determine_current_user', false);
+
+    $logged = (string) file_get_contents($log);
+    ini_set('error_log', (string) $previous);
+    unlink($log);
+
+    expect($logged)->toContain('[portcullis] brute-force protection skipped for this request: [portcullis] connection refused');
+});

@@ -121,4 +121,23 @@ describe('HiddenLoginRouter', function (): void {
         expect($notFound->prepared)->toBeFalse()
             ->and(Wp::callbacks('wp_loaded'))->toHaveCount(1);
     });
+
+    it('ends the request on wp_loaded, last and without arguments, whichever page it serves', function (string $uri, ?DefaultEndpoint $endpoint): void {
+        (new HiddenLoginRouter(
+            LoginSlug::fromString('acces-secret'),
+            new FakeRequestContext(uri: $uri, endpoint: $endpoint),
+            new MatchHiddenLoginRequest,
+            new GuardDefaultEndpoints,
+            new FakeLoginScreen,
+            new FakeNotFound,
+            new WordPressHookRegistrar,
+        ))->route();
+
+        expect(Wp::$hooks['wp_loaded'])->toHaveKey(PHP_INT_MAX)
+            ->and(Wp::$hooks['wp_loaded'][PHP_INT_MAX])->toHaveCount(1)
+            ->and(Wp::$hooks['wp_loaded'][PHP_INT_MAX][0][1])->toBe(0);
+    })->with([
+        'login screen' => ['/acces-secret', null],
+        'not found' => ['/wp-login.php', DefaultEndpoint::Login],
+    ]);
 });
