@@ -40,6 +40,17 @@ it('refuses a hexadecimal key that is not 64 hexadecimal characters', function (
     Subject::fromHex(SubjectScope::Account, $hex);
 })->with(['', 'zz'.'00', 'g'.str_repeat('0', 63), 65 => str_repeat('a', 65)])->throws(InvalidArgumentException::class, '64 hexadecimal');
 
+it('refuses a hexadecimal key followed by a line break', function (): void {
+    // A "$" without the D modifier lets a final "\n" through the pattern, so the
+    // key would be judged by a later, accidental check instead of being refused
+    // as malformed. fromHex() does not trim: the value is taken as given.
+    $key = str_repeat('ab', 32);
+
+    expect(Subject::fromHex(SubjectScope::Ip, $key)->hexKey())->toBe($key)
+        ->and(fn () => Subject::fromHex(SubjectScope::Ip, $key."\n"))
+        ->toThrow(InvalidArgumentException::class, '64 hexadecimal');
+});
+
 it('round-trips a key through its hexadecimal form', function (): void {
     $subject = new Subject(SubjectScope::Account, hash('sha256', 'x', true));
     $copy = Subject::fromHex(SubjectScope::Account, strtoupper($subject->hexKey()));

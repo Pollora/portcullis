@@ -4,6 +4,11 @@
 
 ### Security
 
+- The remaining `$` anchors now carry the `D` modifier (a `$` accepts a final line
+  break): hexadecimal subject keys, CIDR prefixes, the port suffix of
+  `X-Forwarded-For` hops, integer settings and the `unlock` key check. A key with
+  a trailing `\n` is now refused as malformed instead of failing a later check.
+  Elsewhere defence in depth: the values were already trimmed.
 - The login slug pattern is anchored with the `D` modifier, so `$` can no longer
   tolerate a trailing line break. Defence in depth: the slug was already trimmed
   before validation, and requests are compared for strict equality.
