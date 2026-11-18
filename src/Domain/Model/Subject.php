@@ -50,7 +50,7 @@ final class Subject
      */
     public static function fromHex(SubjectScope $scope, string $hexKey): self
     {
-        if (preg_match('/^[0-9a-f]{'.(self::KEY_LENGTH * 2).'}$/i', $hexKey) !== 1) {
+        if (preg_match('/^[0-9a-f]{'.(self::KEY_LENGTH * 2).'}$/Di', $hexKey) !== 1) {
             throw new InvalidArgumentException('A subject key must be written as 64 hexadecimal characters.');
         }
 

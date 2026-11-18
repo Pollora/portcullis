@@ -213,7 +213,7 @@ final class PortcullisCommand
         if ($ip !== null) {
             $targets = [$subjects->forIp($ip)];
             $label = 'address '.$ip->bucket();
-        } elseif (preg_match('/^[0-9a-f]{64}$/i', $value) === 1) {
+        } elseif (preg_match('/^[0-9a-f]{64}$/Di', $value) === 1) {
             $targets = [
                 Subject::fromHex(SubjectScope::Ip, $value),
                 Subject::fromHex(SubjectScope::Account, $value),

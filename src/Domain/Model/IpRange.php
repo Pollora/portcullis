@@ -48,7 +48,7 @@ final class IpRange implements Stringable
 
         if ($prefix === null) {
             $length = $maximum;
-        } elseif (preg_match('/^\d{1,3}$/', $prefix) === 1 && (int) $prefix <= $maximum) {
+        } elseif (preg_match('/^\d{1,3}$/D', $prefix) === 1 && (int) $prefix <= $maximum) {
             $length = (int) $prefix;
         } else {
             throw InvalidIpRangeException::malformed($value);

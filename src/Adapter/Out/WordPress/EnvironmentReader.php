@@ -82,7 +82,7 @@ final class EnvironmentReader
 
         $string = trim((string) $value);
 
-        if (preg_match('/^-?\d+$/', $string) !== 1) {
+        if (preg_match('/^-?\d+$/D', $string) !== 1) {
             throw InvalidThrottlePolicyException::notAnInteger($key, $string);
         }
 

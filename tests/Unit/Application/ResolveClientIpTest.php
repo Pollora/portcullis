@@ -57,3 +57,15 @@ it('returns null when the peer address is unusable', function (): void {
     expect(resolveIp('', null))->toBeNull()
         ->and(resolveIp('unknown', '203.0.113.7', '0.0.0.0/0'))->toBeNull();
 });
+
+it('never reads an address with a line break as anything but the clean address', function (): void {
+    // Defence in depth: the hop is trimmed before the port patterns, which are
+    // also anchored with D. A trailing "\n" must neither survive into the
+    // identity (a separate throttling bucket) nor bypass the trust check.
+    expect(resolveIp('10.0.0.2', "203.0.113.7\n", '10.0.0.0/8'))->toBe('203.0.113.7')
+        ->and(resolveIp('10.0.0.2', "203.0.113.7:4711\n", '10.0.0.0/8'))->toBe('203.0.113.7')
+        ->and(resolveIp('10.0.0.2', "[2001:db8::1]:4711\n", '10.0.0.0/8'))->toBe('2001:db8::1')
+        ->and(resolveIp('10.0.0.2', "203.0.113.7\n9", '10.0.0.0/8'))->toBe('10.0.0.2')
+        ->and(resolveIp("10.0.0.2\n", '203.0.113.7', '10.0.0.0/8'))->toBe('203.0.113.7')
+        ->and(resolveIp('198.51.100.9', "203.0.113.7\n", "10.0.0.0/8\n"))->toBe('198.51.100.9');
+});

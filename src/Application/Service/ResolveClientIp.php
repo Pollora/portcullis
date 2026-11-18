@@ -93,11 +93,11 @@ final class ResolveClientIp
     {
         $hop = trim($hop);
 
-        if (preg_match('/^\[([^\]]+)\](?::\d+)?$/', $hop, $matches) === 1) {
+        if (preg_match('/^\[([^\]]+)\](?::\d+)?$/D', $hop, $matches) === 1) {
             return $matches[1];
         }
 
-        if (preg_match('/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/', $hop, $matches) === 1) {
+        if (preg_match('/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/D', $hop, $matches) === 1) {
             return $matches[1];
         }
 
