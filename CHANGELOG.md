@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Security
+
+- The login slug pattern is anchored with the `D` modifier, so `$` can no longer
+  tolerate a trailing line break. Defence in depth: the slug was already trimmed
+  before validation, and requests are compared for strict equality.
+
 ### Changed
 
 - Requires PHP 8.3 or later (was 8.1), the floor of the Pollora quality harness

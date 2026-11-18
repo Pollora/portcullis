@@ -61,3 +61,12 @@ it('rejects slugs short enough to be guessed', function (): void {
 it('accepts a slug exactly at the minimum length', function (): void {
     expect(LoginSlug::fromString('abcde')->value())->toBe('abcde');
 });
+
+it('normalises a trailing line break and refuses an embedded one', function (): void {
+    // The trim() in fromString() strips a trailing "\n" before validation, and
+    // the pattern is anchored with D so that a "\n" which reaches it is never
+    // tolerated by `$`.
+    expect(LoginSlug::fromString("connexion\n")->value())->toBe('connexion')
+        ->and(fn () => LoginSlug::fromString("connexion\nadmin"))->toThrow(InvalidLoginSlugException::class)
+        ->and(fn () => LoginSlug::fromString("conn\n/exion"))->toThrow(InvalidLoginSlugException::class);
+});
