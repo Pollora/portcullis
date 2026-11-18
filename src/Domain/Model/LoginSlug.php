@@ -83,7 +83,7 @@ final class LoginSlug implements Stringable
             throw InvalidLoginSlugException::empty();
         }
 
-        if (preg_match('/^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$/', $slug) !== 1) {
+        if (preg_match('/^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$/D', $slug) !== 1) {
             throw InvalidLoginSlugException::malformed($slug);
         }
 
