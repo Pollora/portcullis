@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-19
+
 ### Security
 
 - The remaining `$` anchors now carry the `D` modifier (a `$` accepts a final line
