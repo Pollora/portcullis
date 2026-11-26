@@ -13,7 +13,7 @@ namespace Pollora\Portcullis\Tests\Support;
  */
 final class Wp
 {
-    /** @var array<string, array<int, list<array{callable, int}>>> */
+    /** @var array<string, array<int, array<int, array{callable, int}>>> Keyed by priority; removal leaves gaps. */
     public static array $hooks = [];
 
     /** @var array<string, int> */

@@ -7,7 +7,6 @@ use Pollora\Portcullis\Adapter\Out\WordPress\SuperglobalClientAddress;
 use Pollora\Portcullis\Adapter\Out\WordPress\SuperglobalRequestContext;
 use Pollora\Portcullis\Adapter\Out\WordPress\SystemClock;
 use Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar;
-use Pollora\Portcullis\Domain\Model\ClientIp;
 use Pollora\Portcullis\Domain\Model\DefaultEndpoint;
 use Pollora\Portcullis\Domain\Model\Lockout;
 use Pollora\Portcullis\Domain\Model\Subject;
@@ -210,7 +209,7 @@ it('logs a lockout on one line and fires the action', function (): void {
         $received = $args;
     }, 10, 3);
 
-    (new ErrorLogLockoutNotifier(new WordPressHookRegistrar))->lockedOut($lockout, ClientIp::tryFromString('203.0.113.9'), 'admin');
+    (new ErrorLogLockoutNotifier(new WordPressHookRegistrar))->lockedOut($lockout, clientIp('203.0.113.9'), 'admin');
 
     $line = (string) file_get_contents($log);
     ini_set('error_log', (string) $previous);
@@ -229,7 +228,7 @@ it('cannot be made to forge extra log lines through the submitted login', functi
     $lockout = new Lockout(new Subject(SubjectScope::Account, str_repeat('b', 32)), 1_700_000_000, false);
     $forged = "bob\n[portcullis] lockout scope=ip ip=1.2.3.4 login=\"x\" \"quoted\\\" ".str_repeat('z', 200);
 
-    (new ErrorLogLockoutNotifier(new WordPressHookRegistrar))->lockedOut($lockout, ClientIp::tryFromString('203.0.113.9'), $forged);
+    (new ErrorLogLockoutNotifier(new WordPressHookRegistrar))->lockedOut($lockout, clientIp('203.0.113.9'), $forged);
 
     $content = trim((string) file_get_contents($log));
     ini_set('error_log', (string) $previous);

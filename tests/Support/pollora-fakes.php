@@ -29,7 +29,7 @@ namespace Pollora\Support\Facades {
     if (! class_exists(Action::class)) {
         class Action
         {
-            /** @var list<array{string, array<int, mixed>}> */
+            /** @var list<array{string, array<array-key, mixed>}> */
             public static array $calls = [];
 
             public static function add(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
@@ -52,7 +52,7 @@ namespace Pollora\Support\Facades {
     if (! class_exists(Filter::class)) {
         class Filter
         {
-            /** @var list<array{string, array<int, mixed>}> */
+            /** @var list<array{string, array<array-key, mixed>}> */
             public static array $calls = [];
 
             public static function add(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
@@ -64,7 +64,7 @@ namespace Pollora\Support\Facades {
             {
                 self::$calls[] = ['apply', [$hook, $value, ...$args]];
 
-                return 'filtered:'.$value;
+                return 'filtered:'.(is_scalar($value) ? $value : '');
             }
         }
     }

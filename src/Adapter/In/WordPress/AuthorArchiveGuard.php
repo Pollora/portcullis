@@ -69,6 +69,8 @@ final class AuthorArchiveGuard
 
     /**
      * The administration resolves its post lists through the same query.
+     *
+     * @phpstan-assert-if-true WP_Query $query
      */
     private function isFrontEndAuthorArchive(mixed $query): bool
     {

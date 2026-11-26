@@ -105,7 +105,8 @@ final class SuperglobalRequestContext implements RequestContextPort
             return true;
         }
 
-        return defined('DOING_CRON') && DOING_CRON;
+        // The constant still decides when `wp_doing_cron` is filtered to false, or is not there.
+        return defined('DOING_CRON') && DOING_CRON; // @phpstan-ignore phpstanWP.wpConstant.fetch (fallback on purpose: wp_doing_cron() is already asked above, and is filterable)
     }
 
     /**

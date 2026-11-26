@@ -15,7 +15,7 @@ namespace WP_CLI\Utils {
          * @param  array<int, array<string, mixed>>  $items
          * @param  list<string>  $fields
          */
-        function format_items($format, $items, $fields): void
+        function format_items(string $format, array $items, array $fields): void
         {
             \WP_CLI::$tables[] = ['format' => $format, 'items' => $items, 'fields' => $fields];
         }
@@ -49,7 +49,7 @@ namespace {
             /** @var array<string, object> */
             public static array $commands = [];
 
-            /** @var list<array{format: mixed, items: array<int, array<string, mixed>>, fields: list<string>}> */
+            /** @var list<array{format: string, items: array<int, array<string, mixed>>, fields: list<string>}> */
             public static array $tables = [];
 
             public static function reset(): void
@@ -61,27 +61,28 @@ namespace {
                 self::$tables = [];
             }
 
-            public static function line($message = ''): void
+            public static function line(string $message = ''): void
             {
                 self::$lines[] = (string) $message;
             }
 
-            public static function success($message): void
+            public static function success(string $message): void
             {
                 self::$successes[] = (string) $message;
             }
 
-            public static function warning($message): void
+            public static function warning(string $message): void
             {
                 self::$warnings[] = (string) $message;
             }
 
-            public static function error($message, $exit = true): void
+            public static function error(string $message, bool $exit = true): void
             {
                 throw new CliHalt((string) $message);
             }
 
-            public static function add_command($name, $callable, $args = []): void
+            /** @param  array<string, mixed>  $args */
+            public static function add_command(string $name, object $callable, array $args = []): void
             {
                 self::$commands[(string) $name] = $callable;
             }

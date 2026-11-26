@@ -9,7 +9,6 @@ use Pollora\Portcullis\Application\Service\RewriteLoginUrl;
 use Pollora\Portcullis\Domain\Exception\InvalidIpRangeException;
 use Pollora\Portcullis\Domain\Exception\InvalidLoginSlugException;
 use Pollora\Portcullis\Domain\Exception\InvalidThrottlePolicyException;
-use Pollora\Portcullis\Domain\Model\ClientIp;
 use Pollora\Portcullis\Domain\Model\IpRange;
 use Pollora\Portcullis\Domain\Model\LoginSlug;
 use Pollora\Portcullis\Domain\Model\ScopePolicy;
@@ -89,15 +88,15 @@ describe('IpRange parsing', function (): void {
     it('masks the bits past the prefix, byte by byte', function (): void {
         $range = IpRange::fromString('10.255.255.255/12');
 
-        expect($range->contains(ClientIp::tryFromString('10.240.0.1')))->toBeTrue()
-            ->and($range->contains(ClientIp::tryFromString('10.239.255.255')))->toBeFalse()
-            ->and($range->contains(ClientIp::tryFromString('10.255.255.255')))->toBeTrue()
-            ->and($range->contains(ClientIp::tryFromString('11.240.0.1')))->toBeFalse();
+        expect($range->contains(clientIp('10.240.0.1')))->toBeTrue()
+            ->and($range->contains(clientIp('10.239.255.255')))->toBeFalse()
+            ->and($range->contains(clientIp('10.255.255.255')))->toBeTrue()
+            ->and($range->contains(clientIp('11.240.0.1')))->toBeFalse();
     });
 
     it('never matches an address of the other family', function (): void {
-        expect(IpRange::fromString('0.0.0.0/0')->contains(ClientIp::tryFromString('::1')))->toBeFalse()
-            ->and(IpRange::fromString('::/0')->contains(ClientIp::tryFromString('10.0.0.1')))->toBeFalse();
+        expect(IpRange::fromString('0.0.0.0/0')->contains(clientIp('::1')))->toBeFalse()
+            ->and(IpRange::fromString('::/0')->contains(clientIp('10.0.0.1')))->toBeFalse();
     });
 });
 
@@ -123,7 +122,7 @@ describe('DeriveSubjects', function (): void {
         $derive = new DeriveSubjects($secret);
 
         expect($derive->forAccount('Bob')->hexKey())->toBe(hash_hmac('sha256', SubjectScope::Account->label()."\x00bob", $secret))
-            ->and($derive->forIp(ClientIp::tryFromString('203.0.113.7'))->hexKey())->toBe(hash_hmac('sha256', SubjectScope::Ip->label()."\x00203.0.113.7", $secret));
+            ->and($derive->forIp(clientIp('203.0.113.7'))->hexKey())->toBe(hash_hmac('sha256', SubjectScope::Ip->label()."\x00203.0.113.7", $secret));
     });
 });
 

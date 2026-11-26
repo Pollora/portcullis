@@ -78,7 +78,7 @@ final class WpdbSchema
             ? get_network_option(null, $this->versionOption(), 0)
             : get_option($this->versionOption(), 0);
 
-        return (int) $installed === self::VERSION;
+        return is_numeric($installed) && (int) $installed === self::VERSION;
     }
 
     /**

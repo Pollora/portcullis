@@ -24,7 +24,7 @@ if (is_string(getenv('PORTCULLIS_WP_LOAD')) && getenv('PORTCULLIS_WP_LOAD') !== 
 
 // The request would end right after the redirect: the stand-in ends it with an exception instead.
 if (! function_exists('wp_safe_redirect')) {
-    function wp_safe_redirect($location, $status = 302, $x_redirect_by = 'WordPress')
+    function wp_safe_redirect(string $location, int $status = 302, string $x_redirect_by = 'WordPress'): bool
     {
         throw new ResponseSent('redirect:'.$location);
     }

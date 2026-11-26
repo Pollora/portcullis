@@ -46,7 +46,24 @@ function enumerationUser(string $role): int
 {
     $login = 'portcullis-'.$role.'-'.wp_generate_password(8, false);
 
-    return (int) wp_insert_user(['user_login' => $login, 'user_pass' => wp_generate_password(), 'role' => $role]);
+    $id = wp_insert_user(['user_login' => $login, 'user_pass' => wp_generate_password(), 'role' => $role]);
+
+    if (! is_int($id)) {
+        throw new RuntimeException('The test account could not be created: '.$id->get_error_message());
+    }
+
+    return $id;
+}
+
+function enumerationNicename(int $userId): string
+{
+    $user = get_userdata($userId);
+
+    if ($user === false) {
+        throw new RuntimeException('The test account does not exist.');
+    }
+
+    return $user->user_nicename;
 }
 
 function enumerationPost(int $authorId): int
@@ -61,15 +78,15 @@ function enumerationPost(int $authorId): int
  */
 function resolveFrontEnd(array $queryVars): WP_Query
 {
-    $GLOBALS['wp']->main($queryVars);
+    globalInstance('wp', WP::class)->main($queryVars);
 
-    return $GLOBALS['wp_query'];
+    return globalInstance('wp_query', WP_Query::class);
 }
 
 function usePermalinks(string $structure): void
 {
     update_option('permalink_structure', $structure);
-    $GLOBALS['wp_rewrite']->init();
+    globalInstance('wp_rewrite', WP_Rewrite::class)->init();
 }
 
 beforeEach(function (): void {
@@ -135,8 +152,10 @@ it('leaves REST requests filtered by author alone', function (): void {
     $request->set_query_params(['author' => $author]);
     $response = rest_do_request($request);
 
+    $data = $response->get_data();
+
     expect($response->get_status())->toBe(200)
-        ->and(array_column($response->get_data(), 'id'))->toBe([$post]);
+        ->and(array_column(is_array($data) ? $data : [], 'id'))->toBe([$post]);
 });
 
 it('drops the users sitemap only', function (): void {
@@ -160,9 +179,9 @@ it('removes only the class built from the comment author slug', function (): voi
     registerAccountEnumerationGuard($this->hooks);
     $author = enumerationUser('subscriber');
     $comment = wp_insert_comment(['comment_post_ID' => enumerationPost($author), 'user_id' => $author, 'comment_content' => 'Hi']);
-    $slugClass = 'comment-author-'.sanitize_html_class(get_userdata($author)->user_nicename, (string) $author);
+    $slugClass = 'comment-author-'.sanitize_html_class(enumerationNicename($author), (string) $author);
 
-    $classes = get_comment_class('comment-author-highlight', $comment);
+    $classes = get_comment_class('comment-author-highlight', (int) $comment);
 
     expect($classes)->not()->toContain($slugClass)
         ->and($classes)->toContain('comment-author-highlight', 'byuser');
@@ -192,7 +211,7 @@ it('keeps a public archive that lists posts', function (): void {
     $author = enumerationUser('author');
     enumerationPost($author);
 
-    expect(resolveFrontEnd(['author_name' => get_userdata($author)->user_nicename])->is_author())->toBeTrue();
+    expect(resolveFrontEnd(['author_name' => enumerationNicename($author)])->is_author())->toBeTrue();
 });
 
 it('answers a 404 for the archive of an account without posts', function (): void {
@@ -200,7 +219,7 @@ it('answers a 404 for the archive of an account without posts', function (): voi
     registerAuthorArchiveGuard(AuthorArchivePolicy::PublicWithPosts, $this->hooks);
     $customer = enumerationUser('subscriber');
 
-    expect(resolveFrontEnd(['author_name' => get_userdata($customer)->user_nicename])->is_404())->toBeTrue();
+    expect(resolveFrontEnd(['author_name' => enumerationNicename($customer)])->is_404())->toBeTrue();
 });
 
 it('answers a 404 for every archive once they are closed', function (): void {
@@ -209,7 +228,7 @@ it('answers a 404 for every archive once they are closed', function (): void {
     $author = enumerationUser('author');
     enumerationPost($author);
 
-    expect(resolveFrontEnd(['author_name' => get_userdata($author)->user_nicename])->is_404())->toBeTrue();
+    expect(resolveFrontEnd(['author_name' => enumerationNicename($author)])->is_404())->toBeTrue();
 });
 
 it('leaves the administration post lists alone', function (): void {

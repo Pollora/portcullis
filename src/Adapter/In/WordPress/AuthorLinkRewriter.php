@@ -40,7 +40,7 @@ final class AuthorLinkRewriter
         $home = home_url('/');
 
         // The slug is withheld on purpose: the link must not spell it out.
-        $replacement = $this->hooks->applyFilters('portcullis/author_link', $home, (int) $authorId);
+        $replacement = $this->hooks->applyFilters('portcullis/author_link', $home, is_numeric($authorId) ? (int) $authorId : 0);
 
         if (! is_string($replacement)) {
             return $home;

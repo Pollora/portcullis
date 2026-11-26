@@ -19,8 +19,8 @@ final class RemoveOembedAuthor
     /**
      * Drops `author_name` and `author_url` from the response data.
      *
-     * @param  array<string, mixed>  $data  The oEmbed response data.
-     * @return array<string, mixed> The same data without the author fields.
+     * @param  array<array-key, mixed>  $data  The oEmbed response data.
+     * @return array<array-key, mixed> The same data without the author fields.
      */
     public function remove(array $data): array
     {

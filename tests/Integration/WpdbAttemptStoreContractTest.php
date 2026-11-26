@@ -24,7 +24,7 @@ if (! defined('ABSPATH') || ! isset($GLOBALS['wpdb'])) {
 
 dataset('wpdb store', [
     'wpdb' => [function (): AttemptStorePort {
-        $wpdb = $GLOBALS['wpdb'];
+        $wpdb = globalInstance('wpdb', wpdb::class);
 
         $schema = new WpdbSchema($wpdb, WpdbSchema::TABLE.'_test');
         $schema->install();
@@ -43,7 +43,7 @@ attemptStoreContract('wpdb store');
 register_shutdown_function(static function (): void {
     $wpdb = $GLOBALS['wpdb'] ?? null;
 
-    if (is_object($wpdb) && method_exists($wpdb, 'query')) {
+    if ($wpdb instanceof wpdb) {
         $wpdb->query('DROP TABLE IF EXISTS '.$wpdb->base_prefix.WpdbSchema::TABLE.'_test');
     }
 });

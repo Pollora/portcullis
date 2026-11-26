@@ -23,7 +23,7 @@ if (! defined('ABSPATH') || ! isset($GLOBALS['wpdb'])) {
 
 function schemaFor(string $name): WpdbSchema
 {
-    $wpdb = $GLOBALS['wpdb'];
+    $wpdb = globalInstance('wpdb', wpdb::class);
     $wpdb->query('DROP TABLE IF EXISTS '.$wpdb->base_prefix.$name);
     delete_option($name.'_schema_version');
     delete_site_transient($name.'_schema_version_error');
@@ -42,7 +42,7 @@ it('installs the table on first use and records its version', function (): void 
     expect($schema->exists())->toBeFalse()
         ->and($schema->isUpToDate())->toBeFalse();
 
-    (new WpdbAttemptStore($GLOBALS['wpdb'], $schema))->recordFailure(schemaSubject(), 1000, 2000);
+    (new WpdbAttemptStore(globalInstance('wpdb', wpdb::class), $schema))->recordFailure(schemaSubject(), 1000, 2000);
 
     expect($schema->exists())->toBeTrue()
         ->and($schema->isUpToDate())->toBeTrue()
@@ -52,9 +52,9 @@ it('installs the table on first use and records its version', function (): void 
 it('reinstalls a table dropped while its version is still recorded', function (): void {
     $schema = schemaFor('portcullis_schema_test_heal');
     $schema->install();
-    $GLOBALS['wpdb']->query('DROP TABLE '.$schema->table());
+    globalInstance('wpdb', wpdb::class)->query('DROP TABLE '.$schema->table());
 
-    $store = new WpdbAttemptStore($GLOBALS['wpdb'], $schema);
+    $store = new WpdbAttemptStore(globalInstance('wpdb', wpdb::class), $schema);
 
     // The first query hits the missing table: it fails, but forgets the version…
     expect(fn () => $store->lockedUntil([schemaSubject()], 1000))->toThrow(RuntimeException::class)
@@ -75,11 +75,11 @@ it('remembers a failed installation instead of retrying on every request', funct
 
     expect($error)->toContain('could not be created');
 
-    $queries = $GLOBALS['wpdb']->num_queries;
+    $queries = globalInstance('wpdb', wpdb::class)->num_queries;
 
     expect(fn () => $schema->ensure())->toThrow(RuntimeException::class, (string) $error)
         // Only the version check: no second dbDelta() within the retry delay.
-        ->and($GLOBALS['wpdb']->num_queries - $queries)->toBeLessThanOrEqual(2);
+        ->and(globalInstance('wpdb', wpdb::class)->num_queries - $queries)->toBeLessThanOrEqual(2);
 
     delete_site_transient('portcullis schema test failure_schema_version_error');
 });
@@ -87,7 +87,7 @@ it('remembers a failed installation instead of retrying on every request', funct
 register_shutdown_function(static function (): void {
     $wpdb = $GLOBALS['wpdb'] ?? null;
 
-    if (! is_object($wpdb) || ! method_exists($wpdb, 'query')) {
+    if (! $wpdb instanceof wpdb) {
         return;
     }
 

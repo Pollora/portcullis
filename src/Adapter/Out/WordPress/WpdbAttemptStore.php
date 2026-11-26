@@ -66,7 +66,7 @@ final class WpdbAttemptStore implements AttemptStorePort
 
         $this->failOnError();
 
-        return $value === null ? null : (int) $value;
+        return $value === null ? null : $this->integer($value);
     }
 
     /**
@@ -118,10 +118,10 @@ final class WpdbAttemptStore implements AttemptStorePort
         }
 
         return new AttemptState(
-            (int) $row['failures'],
-            (int) $row['lockouts'],
-            $row['locked_until'] === null ? null : (int) $row['locked_until'],
-            (int) $row['window_expires_at'],
+            $this->integer($row['failures']),
+            $this->integer($row['lockouts']),
+            $row['locked_until'] === null ? null : $this->integer($row['locked_until']),
+            $this->integer($row['window_expires_at']),
         );
     }
 
@@ -208,16 +208,26 @@ final class WpdbAttemptStore implements AttemptStorePort
         $lockouts = [];
 
         foreach (is_array($rows) ? $rows : [] as $row) {
-            $scope = SubjectScope::tryFrom((int) $row['scope']);
+            $scope = SubjectScope::tryFrom($this->integer($row['scope']));
 
             if ($scope === null) {
                 continue;
             }
 
-            $lockouts[] = new Lockout(Subject::fromHex($scope, (string) $row['subject']), (int) $row['locked_until'], false);
+            $subject = $row['subject'];
+
+            $lockouts[] = new Lockout(Subject::fromHex($scope, is_string($subject) ? $subject : ''), $this->integer($row['locked_until']), false);
         }
 
         return $lockouts;
+    }
+
+    /**
+     * A column of a row as wpdb returns it: a numeric string, 0 for anything else.
+     */
+    private function integer(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
     }
 
     /**
