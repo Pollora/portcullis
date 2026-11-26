@@ -87,7 +87,7 @@ it('remembers a failed installation instead of retrying on every request', funct
 register_shutdown_function(static function (): void {
     $wpdb = $GLOBALS['wpdb'] ?? null;
 
-    if (! is_object($wpdb) || ! method_exists($wpdb, 'query')) {
+    if (! $wpdb instanceof wpdb) {
         return;
     }
 

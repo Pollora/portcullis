@@ -43,7 +43,7 @@ attemptStoreContract('wpdb store');
 register_shutdown_function(static function (): void {
     $wpdb = $GLOBALS['wpdb'] ?? null;
 
-    if (is_object($wpdb) && method_exists($wpdb, 'query')) {
+    if ($wpdb instanceof wpdb) {
         $wpdb->query('DROP TABLE IF EXISTS '.$wpdb->base_prefix.WpdbSchema::TABLE.'_test');
     }
 });

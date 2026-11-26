@@ -587,7 +587,7 @@ if (! function_exists('dbDelta')) {
      */
     function dbDelta(array|string $queries = '', bool $execute = true): array
     {
-        Wp::$dbDelta[] = (string) $queries;
+        Wp::$dbDelta[] = is_array($queries) ? implode(";\n", $queries) : $queries;
 
         return [];
     }
