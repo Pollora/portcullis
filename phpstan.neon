@@ -1,7 +1,5 @@
 includes:
     - vendor/pollora/harness/presets/phpstan/base.neon
-    # One entry: the DOING_CRON fallback of SuperglobalRequestContext, behind a function_exists() check.
-    - phpstan-baseline.neon
 
 parameters:
     level: 5
