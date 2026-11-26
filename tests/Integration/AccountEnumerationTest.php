@@ -78,15 +78,15 @@ function enumerationPost(int $authorId): int
  */
 function resolveFrontEnd(array $queryVars): WP_Query
 {
-    $GLOBALS['wp']->main($queryVars);
+    globalInstance('wp', WP::class)->main($queryVars);
 
-    return $GLOBALS['wp_query'];
+    return globalInstance('wp_query', WP_Query::class);
 }
 
 function usePermalinks(string $structure): void
 {
     update_option('permalink_structure', $structure);
-    $GLOBALS['wp_rewrite']->init();
+    globalInstance('wp_rewrite', WP_Rewrite::class)->init();
 }
 
 beforeEach(function (): void {
@@ -152,8 +152,10 @@ it('leaves REST requests filtered by author alone', function (): void {
     $request->set_query_params(['author' => $author]);
     $response = rest_do_request($request);
 
+    $data = $response->get_data();
+
     expect($response->get_status())->toBe(200)
-        ->and(array_column($response->get_data(), 'id'))->toBe([$post]);
+        ->and(array_column(is_array($data) ? $data : [], 'id'))->toBe([$post]);
 });
 
 it('drops the users sitemap only', function (): void {

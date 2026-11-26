@@ -93,6 +93,9 @@ if (! class_exists('WP_Rewrite')) {
     {
         public function __construct(private bool $permalinks = false) {}
 
+        /** Core rereads the permalink structure here; the fake has nothing to reread. */
+        public function init(): void {}
+
         public function using_permalinks(): bool
         {
             return $this->permalinks;
@@ -150,6 +153,8 @@ if (! class_exists('wpdb')) {
 
         public string $last_error = '';
 
+        public int $num_queries = 0;
+
         /** @var list<string> */
         public array $queries = [];
 
@@ -162,7 +167,7 @@ if (! class_exists('wpdb')) {
         /** @var list<mixed> */
         public array $listResults = [];
 
-        /** @var list<mixed> */
+        /** @var list<int|bool> */
         public array $queryResults = [];
 
         public function prepare(string $query, mixed ...$args): string
@@ -172,6 +177,7 @@ if (! class_exists('wpdb')) {
 
             return (string) preg_replace_callback('/%([ds])/', static function (array $match) use (&$args): string {
                 $value = array_shift($args);
+                $value = is_scalar($value) ? $value : '';
 
                 return $match[1] === 'd' ? (string) (int) $value : "'".addslashes((string) $value)."'";
             }, $query);
@@ -180,6 +186,11 @@ if (! class_exists('wpdb')) {
         public function esc_like(string $text): string
         {
             return addcslashes($text, '_%\\');
+        }
+
+        public function hide_errors(): bool
+        {
+            return false;
         }
 
         public function get_charset_collate(): string

@@ -23,8 +23,8 @@ final class RemoveAccountRoutes
     /**
      * Drops `/wp/v2/users` and `/wp/v2/users/{id}` from the route map.
      *
-     * @param  array<string, mixed>  $routes  Registered REST routes, keyed by pattern.
-     * @return array<string, mixed> The same routes without the two account routes.
+     * @param  array<array-key, mixed>  $routes  Registered REST routes, keyed by pattern.
+     * @return array<array-key, mixed> The same routes without the two account routes.
      */
     public function remove(array $routes): array
     {

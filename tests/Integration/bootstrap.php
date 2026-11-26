@@ -31,10 +31,14 @@ $_SERVER['REQUEST_URI'] ??= '/';
 // some ship their own development dependencies — PHPUnit included — which would
 // clash with the test runner's. The callback is seeded into the pre-initialised
 // hook array, the only way to filter anything before WordPress loads.
-$GLOBALS['wp_filter']['option_active_plugins'][PHP_INT_MAX][] = [
+$preregistered = $GLOBALS['wp_filter'] ?? null;
+$preregistered = is_array($preregistered) ? $preregistered : [];
+$preregistered['option_active_plugins'] = [PHP_INT_MAX => [[
     'function' => static fn (): array => [],
     'accepted_args' => 1,
-];
+]]];
+$GLOBALS['wp_filter'] = $preregistered;
+unset($preregistered);
 
 // wp-settings.php expects to run at the top level of a script; these globals
 // are the ones it relies on being shared.
@@ -43,4 +47,6 @@ global $wpdb, $wp_version, $wp_filter, $wp_actions, $wp_current_filter, $table_p
 require_once $wpLoad;
 
 // Some tests provoke database errors on purpose; keep WordPress from printing them.
-$GLOBALS['wpdb']->hide_errors();
+if ($GLOBALS['wpdb'] instanceof wpdb) {
+    $GLOBALS['wpdb']->hide_errors();
+}

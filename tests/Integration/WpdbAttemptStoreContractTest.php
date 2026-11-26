@@ -24,7 +24,7 @@ if (! defined('ABSPATH') || ! isset($GLOBALS['wpdb'])) {
 
 dataset('wpdb store', [
     'wpdb' => [function (): AttemptStorePort {
-        $wpdb = $GLOBALS['wpdb'];
+        $wpdb = globalInstance('wpdb', wpdb::class);
 
         $schema = new WpdbSchema($wpdb, WpdbSchema::TABLE.'_test');
         $schema->install();

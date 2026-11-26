@@ -72,13 +72,21 @@ final class Bootstrap
      */
     private static function preregister(): void
     {
-        if (! isset($GLOBALS['wp_filter']) || ! is_array($GLOBALS['wp_filter'])) {
-            $GLOBALS['wp_filter'] = [];
-        }
+        // Rebuilt level by level: each one is kept when it is an array, started otherwise.
+        $filters = $GLOBALS['wp_filter'] ?? null;
+        $filters = is_array($filters) ? $filters : [];
+        $priorities = $filters[self::BOOT_HOOK] ?? null;
+        $priorities = is_array($priorities) ? $priorities : [];
+        $callbacks = $priorities[0] ?? null;
+        $callbacks = is_array($callbacks) ? $callbacks : [];
 
-        $GLOBALS['wp_filter'][self::BOOT_HOOK][0][] = [
+        $callbacks[] = [
             'function' => [Portcullis::class, 'boot'],
             'accepted_args' => 0,
         ];
+        $priorities[0] = $callbacks;
+        $filters[self::BOOT_HOOK] = $priorities;
+
+        $GLOBALS['wp_filter'] = $filters;
     }
 }

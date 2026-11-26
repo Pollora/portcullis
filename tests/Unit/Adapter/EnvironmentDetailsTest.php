@@ -23,11 +23,9 @@ if (is_string(getenv('PORTCULLIS_WP_LOAD')) && getenv('PORTCULLIS_WP_LOAD') !== 
 }
 
 afterEach(function (): void {
-    foreach (['_ENV', '_SERVER'] as $superglobal) {
-        foreach (array_keys($GLOBALS[$superglobal]) as $key) {
-            if (str_starts_with((string) $key, 'PORTCULLIS_TEST_')) {
-                unset($GLOBALS[$superglobal][$key]);
-            }
+    foreach (array_keys($_ENV + $_SERVER) as $key) {
+        if (str_starts_with((string) $key, 'PORTCULLIS_TEST_')) {
+            unset($_ENV[$key], $_SERVER[$key]);
         }
     }
 });

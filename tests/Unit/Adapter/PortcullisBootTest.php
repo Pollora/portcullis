@@ -9,7 +9,10 @@ use Pollora\Portcullis\Domain\Model\FeatureState;
 use Pollora\Portcullis\Domain\Model\ScopePolicy;
 use Pollora\Portcullis\Domain\Model\ThrottlePolicy;
 use Pollora\Portcullis\Domain\Model\ThrottleSettings;
+use Pollora\Portcullis\Port\Out\AccountEnumerationSettingsPort;
+use Pollora\Portcullis\Port\Out\AttemptStorePort;
 use Pollora\Portcullis\Port\Out\FeatureTogglePort;
+use Pollora\Portcullis\Port\Out\SlugProviderPort;
 use Pollora\Portcullis\Port\Out\ThrottleSettingsPort;
 use Pollora\Portcullis\Portcullis;
 use Pollora\Portcullis\Tests\Support\FixedEnumerationSettings;
@@ -28,7 +31,7 @@ if (is_string(getenv('PORTCULLIS_WP_LOAD')) && getenv('PORTCULLIS_WP_LOAD') !== 
  * Only what a test names is injected; the rest is switched off, so that each
  * test shows which part of the configuration brings which hooks.
  *
- * @param  array<string, mixed>  $overrides
+ * @param  array{slugProvider?: SlugProviderPort, toggle?: FeatureTogglePort, throttleSettings?: ThrottleSettingsPort, store?: AttemptStorePort|null, enumerationSettings?: AccountEnumerationSettingsPort}  $overrides
  */
 function bootWith(array $overrides = []): RecordingHooks
 {
@@ -257,13 +260,14 @@ it('skips the brute-force protection, rather than failing, when there is no data
 });
 
 it('stores the counters in the WordPress database by default, and looks after the table', function (): void {
-    $GLOBALS['wpdb'] = new wpdb;
+    $wpdb = new wpdb;
+    $GLOBALS['wpdb'] = $wpdb;
 
     bootWith(['throttleSettings' => bootThrottle(true), 'store' => null]);
 
     expect(hasHooks('authenticate', 'admin_init', 'network_admin_notices'))->toBeTrue()
         ->and(Wp::$hooks['admin_init'])->toHaveKey(1)
-        ->and((new WpdbSchema($GLOBALS['wpdb']))->isUpToDate())->toBeFalse();
+        ->and((new WpdbSchema($wpdb))->isUpToDate())->toBeFalse();
 });
 
 it('boots on the default adapters, reading its configuration from the environment', function (): void {

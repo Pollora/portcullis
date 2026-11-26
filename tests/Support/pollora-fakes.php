@@ -64,7 +64,7 @@ namespace Pollora\Support\Facades {
             {
                 self::$calls[] = ['apply', [$hook, $value, ...$args]];
 
-                return 'filtered:'.$value;
+                return 'filtered:'.(is_scalar($value) ? $value : '');
             }
         }
     }

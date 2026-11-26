@@ -280,12 +280,14 @@ final class Portcullis
         $schema = null;
 
         if ($store === null) {
-            if (! isset($GLOBALS['wpdb']) || ! $GLOBALS['wpdb'] instanceof \wpdb) {
+            $wpdb = $GLOBALS['wpdb'] ?? null;
+
+            if (! $wpdb instanceof \wpdb) {
                 return null;
             }
 
-            $schema = new WpdbSchema($GLOBALS['wpdb']);
-            $store = new WpdbAttemptStore($GLOBALS['wpdb'], $schema);
+            $schema = new WpdbSchema($wpdb);
+            $store = new WpdbAttemptStore($wpdb, $schema);
         }
 
         $clock = new SystemClock;

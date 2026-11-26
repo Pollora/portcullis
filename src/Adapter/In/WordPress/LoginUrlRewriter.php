@@ -143,7 +143,9 @@ final class LoginUrlRewriter
     private function baseUrl(?string $scheme, bool $network): string
     {
         if ($this->resolvingBaseUrl) {
-            return rtrim((string) get_option('home'), '/');
+            $home = get_option('home');
+
+            return is_string($home) ? rtrim($home, '/') : '';
         }
 
         $this->resolvingBaseUrl = true;
