@@ -500,7 +500,7 @@ if (! function_exists('is_email')) {
 if (! function_exists('sanitize_html_class')) {
     function sanitize_html_class(string $classname, string $fallback_value = ''): string
     {
-        $sanitized = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $classname);
+        $sanitized = (string) preg_replace('/[^A-Za-z0-9_-]/', '', $classname);
 
         return $sanitized === '' ? $fallback_value : $sanitized;
     }

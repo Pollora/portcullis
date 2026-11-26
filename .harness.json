@@ -5,7 +5,7 @@
         "Rector"
     ],
     "ratchet": {
-        "phpstan_level": 7,
+        "phpstan_level": 8,
         "phpstan_baseline": 1,
         "coverage": 95,
         "type_coverage": 100,

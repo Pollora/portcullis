@@ -142,9 +142,9 @@ describe('WpdbSchema', function (): void {
         unlink($log);
 
         expect($thrown)->toBeInstanceOf(RuntimeException::class)
-            ->and($thrown->getMessage())->toContain('wp_portcullis_attempts could not be created: CREATE command denied to user')
+            ->and($thrown?->getMessage())->toContain('wp_portcullis_attempts could not be created: CREATE command denied to user')
             ->and($schema->isUpToDate())->toBeFalse()
-            ->and($schema->lastInstallError())->toBe($thrown->getMessage())
+            ->and($schema->lastInstallError())->toBe($thrown?->getMessage())
             ->and($logged)->toContain('[portcullis] The table wp_portcullis_attempts could not be created');
     });
 

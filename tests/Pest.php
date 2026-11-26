@@ -32,3 +32,4 @@ if (! $portcullisRealWordPress) {
 }
 
 require_once __DIR__.'/Support/php-subprocess.php';
+require_once __DIR__.'/Support/helpers.php';

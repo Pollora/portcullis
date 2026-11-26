@@ -10,7 +10,6 @@ use Pollora\Portcullis\Adapter\Out\WordPress\ErrorLogLockoutNotifier;
 use Pollora\Portcullis\Adapter\Out\WordPress\SuperglobalRequestContext;
 use Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar;
 use Pollora\Portcullis\Adapter\Out\WordPress\WpLoginScreenRenderer;
-use Pollora\Portcullis\Domain\Model\ClientIp;
 use Pollora\Portcullis\Domain\Model\Lockout;
 use Pollora\Portcullis\Domain\Model\LoginSlug;
 use Pollora\Portcullis\Domain\Model\Subject;
@@ -129,8 +128,8 @@ describe('ErrorLogLockoutNotifier', function (): void {
         $previous = ini_set('error_log', $log);
         $lockout = new Lockout(new Subject(SubjectScope::Account, hash('sha256', 'a', true)), 1_700_000_000, true);
 
-        (new ErrorLogLockoutNotifier(new WordPressHookRegistrar))->lockedOut($lockout, ClientIp::tryFromString('203.0.113.7'), str_repeat('a', 99)."\"\n\x01é".str_repeat('b', 60));
-        (new ErrorLogLockoutNotifier(new WordPressHookRegistrar))->lockedOut($lockout, ClientIp::tryFromString('203.0.113.7'), str_repeat('c', 150));
+        (new ErrorLogLockoutNotifier(new WordPressHookRegistrar))->lockedOut($lockout, clientIp('203.0.113.7'), str_repeat('a', 99)."\"\n\x01é".str_repeat('b', 60));
+        (new ErrorLogLockoutNotifier(new WordPressHookRegistrar))->lockedOut($lockout, clientIp('203.0.113.7'), str_repeat('c', 150));
 
         $lines = array_values(array_filter(explode("\n", (string) file_get_contents($log))));
         ini_set('error_log', (string) $previous);

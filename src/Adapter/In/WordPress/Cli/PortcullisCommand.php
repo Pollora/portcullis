@@ -244,15 +244,17 @@ final class PortcullisCommand
      */
     public function install(): void
     {
-        if ($this->schema === null) {
+        $schema = $this->schema;
+
+        if ($schema === null) {
             WP_CLI::error('Nothing to install: the attempts are not stored in the WordPress database.');
 
             return;
         }
 
-        $this->attempt(fn () => $this->schema->install());
+        $this->attempt(fn () => $schema->install());
 
-        WP_CLI::success(sprintf('Table %s is up to date (schema version %d).', $this->schema->table(), WpdbSchema::VERSION));
+        WP_CLI::success(sprintf('Table %s is up to date (schema version %d).', $schema->table(), WpdbSchema::VERSION));
     }
 
     /**

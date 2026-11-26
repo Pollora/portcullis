@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Pollora\Portcullis\Adapter\Out\WordPress\EnvironmentThrottleSettings;
 use Pollora\Portcullis\Domain\Exception\InvalidThrottlePolicyException;
-use Pollora\Portcullis\Domain\Model\ClientIp;
 use Pollora\Portcullis\Domain\Model\SubjectScope;
 use Pollora\Portcullis\Domain\Model\ThrottlePolicy;
 
@@ -37,8 +36,8 @@ it('is enabled unless explicitly switched off', function (): void {
 
 it('applies the documented defaults when nothing is configured', function (): void {
     $settings = (new EnvironmentThrottleSettings)->settings();
-    $ip = $settings->policy()->forScope(SubjectScope::Ip);
-    $account = $settings->policy()->forScope(SubjectScope::Account);
+    $ip = scopePolicy($settings->policy(), SubjectScope::Ip);
+    $account = scopePolicy($settings->policy(), SubjectScope::Account);
 
     expect($ip->maxRetries())->toBe(ThrottlePolicy::DEFAULT_MAX_RETRIES)
         ->and($ip->lockoutDuration())->toBe(ThrottlePolicy::DEFAULT_LOCKOUT_DURATION)
@@ -60,8 +59,8 @@ it('reads every threshold from the environment', function (): void {
     $_ENV['PORTCULLIS_ACCOUNT_LOCKOUT_DURATION'] = '900';
 
     $policy = (new EnvironmentThrottleSettings)->settings()->policy();
-    $ip = $policy->forScope(SubjectScope::Ip);
-    $account = $policy->forScope(SubjectScope::Account);
+    $ip = scopePolicy($policy, SubjectScope::Ip);
+    $account = scopePolicy($policy, SubjectScope::Account);
 
     expect($ip->maxRetries())->toBe(3)
         ->and($ip->lockoutDuration())->toBe(600)
@@ -75,7 +74,7 @@ it('reads every threshold from the environment', function (): void {
 it('lets the account lockout follow the address lockout when not configured on its own', function (): void {
     $_ENV['PORTCULLIS_LOCKOUT_DURATION'] = '450';
 
-    $account = (new EnvironmentThrottleSettings)->settings()->policy()->forScope(SubjectScope::Account);
+    $account = scopePolicy((new EnvironmentThrottleSettings)->settings()->policy(), SubjectScope::Account);
 
     expect($account->lockoutDuration())->toBe(450);
 });
@@ -94,8 +93,8 @@ it('parses the trusted proxies and the allowlist as ranges', function (): void {
 
     expect($settings->trustedProxies())->toHaveCount(2)
         ->and($settings->allowlist())->toHaveCount(1)
-        ->and($settings->isAllowlisted(ClientIp::tryFromString('203.0.113.77')))->toBeTrue()
-        ->and($settings->isAllowlisted(ClientIp::tryFromString('203.0.114.1')))->toBeFalse();
+        ->and($settings->isAllowlisted(clientIp('203.0.113.77')))->toBeTrue()
+        ->and($settings->isAllowlisted(clientIp('203.0.114.1')))->toBeFalse();
 });
 
 it('switches generic login errors off on request', function (): void {

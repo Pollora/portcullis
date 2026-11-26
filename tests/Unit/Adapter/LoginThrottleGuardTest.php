@@ -164,7 +164,7 @@ it('locks the address out at the threshold and says so', function (): void {
         ->and($third->get_error_codes())->toBe([LoginThrottleGuard::ERROR_CODE])
         ->and($third->get_error_message())->toContain('Too many failed login attempts')
         ->and($notified)->toHaveCount(1)
-        ->and($notified[0][2])->toBe('admin');
+        ->and($notified[0][2] ?? null)->toBe('admin');
 });
 
 it('refuses a locked-out address even with the right password', function (): void {
@@ -603,21 +603,21 @@ it('reports an empty login to the notifier when the lockout comes from a login t
     apply_filters('authenticate', new WP_Error('incorrect_password', 'x'), null, 'secret');
 
     expect($notified)->toHaveCount(1)
-        ->and($notified[0][2])->toBe('');
+        ->and($notified[0][2] ?? null)->toBe('');
 
     $_SERVER['REMOTE_ADDR'] = '198.51.100.11';
     failFrom('198.51.100.11', 'u2', 2);
     do_action('wp_login_failed', null, new WP_Error('incorrect_password', 'x'));
 
     expect($notified)->toHaveCount(2)
-        ->and($notified[1][2])->toBe('');
+        ->and($notified[1][2] ?? null)->toBe('');
 
     $_SERVER['REMOTE_ADDR'] = '198.51.100.12';
     failFrom('198.51.100.12', 'u3', 2);
     do_action('application_password_failed_authentication', new WP_Error('incorrect_password', 'x'));
 
     expect($notified)->toHaveCount(3)
-        ->and($notified[2][2])->toBe('');
+        ->and($notified[2][2] ?? null)->toBe('');
 });
 
 it('does not count the same failure twice when it comes through authenticate and an application password', function (): void {

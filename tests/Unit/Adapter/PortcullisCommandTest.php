@@ -9,7 +9,6 @@ use Pollora\Portcullis\Adapter\Out\WordPress\WordPressHookRegistrar;
 use Pollora\Portcullis\Adapter\Out\WordPress\WpdbSchema;
 use Pollora\Portcullis\Application\Service\DeriveSubjects;
 use Pollora\Portcullis\Domain\Model\AuthorArchivePolicy;
-use Pollora\Portcullis\Domain\Model\ClientIp;
 use Pollora\Portcullis\Domain\Model\IpRange;
 use Pollora\Portcullis\Domain\Model\ScopePolicy;
 use Pollora\Portcullis\Domain\Model\Subject;
@@ -201,7 +200,7 @@ describe('lockouts', function (): void {
 
     it('lists running lockouts, never the address or the login behind a key', function (): void {
         ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
-        $ip = $subjects->forIp(ClientIp::tryFromString('203.0.113.9'));
+        $ip = $subjects->forIp(clientIp('203.0.113.9'));
         lockOut($store, $ip, $clock->now() + 600);
 
         $command->lockouts([], ['format' => 'json']);
@@ -220,7 +219,7 @@ describe('lockouts', function (): void {
     it('is a table by default and honours the limit', function (): void {
         ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
         foreach (['203.0.113.1', '203.0.113.2', '203.0.113.3'] as $address) {
-            lockOut($store, $subjects->forIp(ClientIp::tryFromString($address)), $clock->now() + 600);
+            lockOut($store, $subjects->forIp(clientIp($address)), $clock->now() + 600);
         }
 
         $command->lockouts([], ['limit' => '2']);
@@ -245,8 +244,8 @@ describe('lockouts', function (): void {
 describe('unlock', function (): void {
     it('forgets an address, and only that address', function (): void {
         ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
-        $target = $subjects->forIp(ClientIp::tryFromString('203.0.113.9'));
-        $other = $subjects->forIp(ClientIp::tryFromString('203.0.113.10'));
+        $target = $subjects->forIp(clientIp('203.0.113.9'));
+        $other = $subjects->forIp(clientIp('203.0.113.10'));
         lockOut($store, $target, $clock->now() + 600);
         lockOut($store, $other, $clock->now() + 600);
 
@@ -259,7 +258,7 @@ describe('unlock', function (): void {
 
     it('forgets the whole /64 of an IPv6 address', function (): void {
         ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
-        $neighbour = $subjects->forIp(ClientIp::tryFromString('2001:db8:1:2::ffff'));
+        $neighbour = $subjects->forIp(clientIp('2001:db8:1:2::ffff'));
         lockOut($store, $neighbour, $clock->now() + 600);
 
         $command->unlock(['2001:db8:1:2::1']);
@@ -291,7 +290,7 @@ describe('unlock', function (): void {
 
     it('forgets a key as shown by `lockouts`, in whichever scope it lives', function (): void {
         ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
-        $ip = $subjects->forIp(ClientIp::tryFromString('203.0.113.9'));
+        $ip = $subjects->forIp(clientIp('203.0.113.9'));
         $account = $subjects->forAccount('login:ghost');
         lockOut($store, $ip, $clock->now() + 600);
         lockOut($store, $account, $clock->now() + 600);
@@ -407,7 +406,7 @@ describe('output, line by line', function (): void {
     it('lists every lockout with its remaining time, by default up to fifty', function (): void {
         ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
         foreach (range(1, 51) as $i) {
-            lockOut($store, $subjects->forIp(ClientIp::tryFromString('203.0.113.'.$i)), $clock->now() + 600);
+            lockOut($store, $subjects->forIp(clientIp('203.0.113.'.$i)), $clock->now() + 600);
         }
 
         $command->lockouts([], []);
@@ -424,7 +423,7 @@ describe('output, line by line', function (): void {
     it('lists at least one lockout, whatever limit it is given', function (string $limit, int $expected): void {
         ['command' => $command, 'store' => $store, 'subjects' => $subjects, 'clock' => $clock] = cliCommand();
         foreach (['203.0.113.1', '203.0.113.2', '203.0.113.3'] as $address) {
-            lockOut($store, $subjects->forIp(ClientIp::tryFromString($address)), $clock->now() + 600);
+            lockOut($store, $subjects->forIp(clientIp($address)), $clock->now() + 600);
         }
 
         $command->lockouts([], ['limit' => $limit]);
