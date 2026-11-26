@@ -33,12 +33,18 @@ $_SERVER['REQUEST_URI'] ??= '/';
 // hook array, the only way to filter anything before WordPress loads.
 $preregistered = $GLOBALS['wp_filter'] ?? null;
 $preregistered = is_array($preregistered) ? $preregistered : [];
-$preregistered['option_active_plugins'] = [PHP_INT_MAX => [[
+$priorities = $preregistered['option_active_plugins'] ?? null;
+$priorities = is_array($priorities) ? $priorities : [];
+$callbacks = $priorities[PHP_INT_MAX] ?? null;
+$callbacks = is_array($callbacks) ? $callbacks : [];
+$callbacks[] = [
     'function' => static fn (): array => [],
     'accepted_args' => 1,
-]]];
+];
+$priorities[PHP_INT_MAX] = $callbacks;
+$preregistered['option_active_plugins'] = $priorities;
 $GLOBALS['wp_filter'] = $preregistered;
-unset($preregistered);
+unset($preregistered, $priorities, $callbacks);
 
 // wp-settings.php expects to run at the top level of a script; these globals
 // are the ones it relies on being shared.

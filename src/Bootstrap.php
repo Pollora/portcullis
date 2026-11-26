@@ -84,6 +84,7 @@ final class Bootstrap
             'function' => [Portcullis::class, 'boot'],
             'accepted_args' => 0,
         ];
+
         $priorities[0] = $callbacks;
         $filters[self::BOOT_HOOK] = $priorities;
 
