@@ -59,6 +59,7 @@ function throttleGuard(array $allowlist = [], array $trustedProxies = [], ?Attem
     $notified = new ArrayObject;
     $notifier = new class($notified) implements LockoutNotifierPort
     {
+        /** @param  ArrayObject<int, array{Lockout, ClientIp, string}>  $log */
         public function __construct(private readonly ArrayObject $log) {}
 
         public function lockedOut(Lockout $lockout, ClientIp $ip, string $login): void

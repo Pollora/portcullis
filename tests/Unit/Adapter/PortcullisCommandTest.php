@@ -35,6 +35,10 @@ function enumerationSettings(bool $enabled = true, AuthorArchivePolicy $policy =
     return new FixedEnumerationSettings($enabled, $policy);
 }
 
+/**
+ * @param  list<string>  $proxies
+ * @param  list<string>  $allowlist
+ */
 function cliSettings(bool $account = true, array $proxies = [], array $allowlist = [], bool $generic = true): ThrottleSettings
 {
     return new ThrottleSettings(

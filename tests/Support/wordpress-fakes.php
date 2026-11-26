@@ -222,7 +222,7 @@ if (! class_exists('wpdb')) {
  */
 
 if (! function_exists('add_filter')) {
-    function add_filter($hook_name, $callback, $priority = 10, $accepted_args = 1)
+    function add_filter(string $hook_name, callable $callback, int $priority = 10, int $accepted_args = 1): bool
     {
         Wp::$hooks[$hook_name][$priority][] = [$callback, $accepted_args];
 
@@ -231,14 +231,17 @@ if (! function_exists('add_filter')) {
 }
 
 if (! function_exists('add_action')) {
-    function add_action($hook_name, $callback, $priority = 10, $accepted_args = 1)
+    function add_action(string $hook_name, callable $callback, int $priority = 10, int $accepted_args = 1): bool
     {
         return add_filter($hook_name, $callback, $priority, $accepted_args);
     }
 }
 
 if (! function_exists('remove_filter')) {
-    function remove_filter($hook_name, $callback, $priority = 10)
+    /**
+     * @param  callable|array{object|string, string}|string  $callback
+     */
+    function remove_filter(string $hook_name, callable|array|string $callback, int $priority = 10): bool
     {
         foreach (Wp::$hooks[$hook_name][$priority] ?? [] as $index => [$registered]) {
             if ($registered == $callback) {
@@ -253,14 +256,17 @@ if (! function_exists('remove_filter')) {
 }
 
 if (! function_exists('remove_action')) {
-    function remove_action($hook_name, $callback, $priority = 10)
+    /**
+     * @param  callable|array{object|string, string}|string  $callback
+     */
+    function remove_action(string $hook_name, callable|array|string $callback, int $priority = 10): bool
     {
         return remove_filter($hook_name, $callback, $priority);
     }
 }
 
 if (! function_exists('apply_filters')) {
-    function apply_filters($hook_name, $value, ...$args)
+    function apply_filters(string $hook_name, mixed $value, mixed ...$args): mixed
     {
         $byPriority = Wp::$hooks[$hook_name] ?? [];
         ksort($byPriority);
@@ -276,7 +282,7 @@ if (! function_exists('apply_filters')) {
 }
 
 if (! function_exists('do_action')) {
-    function do_action($hook_name, ...$arg)
+    function do_action(string $hook_name, mixed ...$arg): void
     {
         Wp::$fired[$hook_name] = (Wp::$fired[$hook_name] ?? 0) + 1;
 
@@ -292,7 +298,7 @@ if (! function_exists('do_action')) {
 }
 
 if (! function_exists('did_action')) {
-    function did_action($hook_name)
+    function did_action(string $hook_name): int
     {
         return Wp::$fired[$hook_name] ?? 0;
     }
@@ -303,7 +309,7 @@ if (! function_exists('did_action')) {
  */
 
 if (! function_exists('home_url')) {
-    function home_url($path = '', $scheme = null)
+    function home_url(string $path = '', ?string $scheme = null): string
     {
         if (Wp::$onHomeUrl !== null) {
             (Wp::$onHomeUrl)();
@@ -314,21 +320,21 @@ if (! function_exists('home_url')) {
 }
 
 if (! function_exists('site_url')) {
-    function site_url($path = '', $scheme = null)
+    function site_url(string $path = '', ?string $scheme = null): string
     {
         return wpFakeUrl(Wp::$site, $path, $scheme);
     }
 }
 
 if (! function_exists('network_home_url')) {
-    function network_home_url($path = '', $scheme = null)
+    function network_home_url(string $path = '', ?string $scheme = null): string
     {
         return wpFakeUrl(Wp::$networkHome ?? Wp::$home, $path, $scheme);
     }
 }
 
 if (! function_exists('admin_url')) {
-    function admin_url($path = '', $scheme = 'admin')
+    function admin_url(string $path = '', string $scheme = 'admin'): string
     {
         return wpFakeUrl(Wp::$site.'/wp-admin', $path, null);
     }
@@ -349,14 +355,14 @@ if (! function_exists('wpFakeUrl')) {
 }
 
 if (! function_exists('get_option')) {
-    function get_option($option, $default_value = false)
+    function get_option(string $option, mixed $default_value = false): mixed
     {
         return Wp::$options[$option] ?? $default_value;
     }
 }
 
 if (! function_exists('update_option')) {
-    function update_option($option, $value, $autoload = null)
+    function update_option(string $option, mixed $value, bool|string|null $autoload = null): bool
     {
         Wp::$options[$option] = $value;
         Wp::$autoload[$option] = $autoload;
@@ -366,7 +372,7 @@ if (! function_exists('update_option')) {
 }
 
 if (! function_exists('delete_option')) {
-    function delete_option($option)
+    function delete_option(string $option): bool
     {
         unset(Wp::$options[$option]);
 
@@ -375,14 +381,14 @@ if (! function_exists('delete_option')) {
 }
 
 if (! function_exists('get_network_option')) {
-    function get_network_option($network_id, $option, $default_value = false)
+    function get_network_option(?int $network_id, string $option, mixed $default_value = false): mixed
     {
         return Wp::$networkOptions[$option] ?? $default_value;
     }
 }
 
 if (! function_exists('update_network_option')) {
-    function update_network_option($network_id, $option, $value)
+    function update_network_option(?int $network_id, string $option, mixed $value): bool
     {
         Wp::$networkOptions[$option] = $value;
 
@@ -391,7 +397,7 @@ if (! function_exists('update_network_option')) {
 }
 
 if (! function_exists('delete_network_option')) {
-    function delete_network_option($network_id, $option)
+    function delete_network_option(?int $network_id, string $option): bool
     {
         unset(Wp::$networkOptions[$option]);
 
@@ -400,14 +406,14 @@ if (! function_exists('delete_network_option')) {
 }
 
 if (! function_exists('get_site_transient')) {
-    function get_site_transient($transient)
+    function get_site_transient(string $transient): mixed
     {
         return Wp::$transients[$transient] ?? false;
     }
 }
 
 if (! function_exists('set_site_transient')) {
-    function set_site_transient($transient, $value, $expiration = 0)
+    function set_site_transient(string $transient, mixed $value, int $expiration = 0): bool
     {
         Wp::$transients[$transient] = $value;
 
@@ -416,7 +422,7 @@ if (! function_exists('set_site_transient')) {
 }
 
 if (! function_exists('delete_site_transient')) {
-    function delete_site_transient($transient)
+    function delete_site_transient(string $transient): bool
     {
         unset(Wp::$transients[$transient]);
 
@@ -425,56 +431,56 @@ if (! function_exists('delete_site_transient')) {
 }
 
 if (! function_exists('is_multisite')) {
-    function is_multisite()
+    function is_multisite(): bool
     {
         return Wp::$multisite;
     }
 }
 
 if (! function_exists('is_admin')) {
-    function is_admin()
+    function is_admin(): bool
     {
         return Wp::$admin;
     }
 }
 
 if (! function_exists('is_user_logged_in')) {
-    function is_user_logged_in()
+    function is_user_logged_in(): bool
     {
         return Wp::$loggedIn;
     }
 }
 
 if (! function_exists('wp_doing_cron')) {
-    function wp_doing_cron()
+    function wp_doing_cron(): bool
     {
         return Wp::$doingCron;
     }
 }
 
 if (! function_exists('is_404')) {
-    function is_404()
+    function is_404(): bool
     {
         return Wp::$is404;
     }
 }
 
 if (! function_exists('current_user_can')) {
-    function current_user_can($capability, ...$args)
+    function current_user_can(string $capability, mixed ...$args): bool
     {
         return in_array($capability, Wp::$capabilities, true);
     }
 }
 
 if (! function_exists('get_userdata')) {
-    function get_userdata($user_id)
+    function get_userdata(int|string $user_id): WP_User|false
     {
         return Wp::$usersById[(int) $user_id] ?? false;
     }
 }
 
 if (! function_exists('get_user_by')) {
-    function get_user_by($field, $value)
+    function get_user_by(string $field, int|string $value): WP_User|false
     {
         return match ($field) {
             'login' => Wp::$usersByLogin[$value] ?? false,
@@ -485,14 +491,14 @@ if (! function_exists('get_user_by')) {
 }
 
 if (! function_exists('is_email')) {
-    function is_email($email, $deprecated = false)
+    function is_email(string $email, bool $deprecated = false): string|false
     {
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? $email : false;
     }
 }
 
 if (! function_exists('sanitize_html_class')) {
-    function sanitize_html_class($classname, $fallback_value = '')
+    function sanitize_html_class(string $classname, string $fallback_value = ''): string
     {
         $sanitized = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $classname);
 
@@ -501,21 +507,21 @@ if (! function_exists('sanitize_html_class')) {
 }
 
 if (! function_exists('status_header')) {
-    function status_header($code, $description = '')
+    function status_header(int|string $code, string $description = ''): void
     {
         Wp::$statuses[] = (int) $code;
     }
 }
 
 if (! function_exists('nocache_headers')) {
-    function nocache_headers()
+    function nocache_headers(): void
     {
         Wp::$noCacheHeaders++;
     }
 }
 
 if (! function_exists('human_time_diff')) {
-    function human_time_diff($from, $to = 0)
+    function human_time_diff(int|string $from, int|string $to = 0): string
     {
         $seconds = abs((int) $to - (int) $from);
 
@@ -524,14 +530,20 @@ if (! function_exists('human_time_diff')) {
 }
 
 if (! function_exists('wp_next_scheduled')) {
-    function wp_next_scheduled($hook, $args = [])
+    /**
+     * @param  list<mixed>  $args
+     */
+    function wp_next_scheduled(string $hook, array $args = []): int|false
     {
         return Wp::$scheduled[$hook] ?? false;
     }
 }
 
 if (! function_exists('wp_schedule_event')) {
-    function wp_schedule_event($timestamp, $recurrence, $hook, $args = [], $wp_error = false)
+    /**
+     * @param  list<mixed>  $args
+     */
+    function wp_schedule_event(int|string $timestamp, string $recurrence, string $hook, array $args = [], bool $wp_error = false): bool
     {
         Wp::$scheduleCalls[] = [(int) $timestamp, (string) $recurrence, (string) $hook];
         Wp::$scheduled[$hook] = (int) $timestamp;
@@ -541,7 +553,10 @@ if (! function_exists('wp_schedule_event')) {
 }
 
 if (! function_exists('get_page_by_path')) {
-    function get_page_by_path($page_path, $output = OBJECT, $post_type = 'page')
+    /**
+     * @param  list<string>|string  $post_type
+     */
+    function get_page_by_path(string $page_path, string $output = OBJECT, array|string $post_type = 'page'): ?stdClass
     {
         Wp::$pageLookups[] = [(string) $page_path, $output, (array) $post_type];
 
@@ -550,7 +565,11 @@ if (! function_exists('get_page_by_path')) {
 }
 
 if (! function_exists('get_post_types')) {
-    function get_post_types($args = [], $output = 'names', $operator = 'and')
+    /**
+     * @param  array<string, mixed>  $args
+     * @return array<string, string>
+     */
+    function get_post_types(array $args = [], string $output = 'names', string $operator = 'and'): array
     {
         // Only the public post types are known to the fake installation.
         if (($args['public'] ?? null) !== true) {
@@ -562,7 +581,11 @@ if (! function_exists('get_post_types')) {
 }
 
 if (! function_exists('dbDelta')) {
-    function dbDelta($queries = '', $execute = true)
+    /**
+     * @param  list<string>|string  $queries
+     * @return array<string, string>
+     */
+    function dbDelta(array|string $queries = '', bool $execute = true): array
     {
         Wp::$dbDelta[] = (string) $queries;
 
@@ -575,21 +598,21 @@ if (! function_exists('dbDelta')) {
  */
 
 if (! function_exists('__')) {
-    function __($text, $domain = 'default')
+    function __(string $text, string $domain = 'default'): string
     {
         return $text;
     }
 }
 
 if (! function_exists('esc_html')) {
-    function esc_html($text)
+    function esc_html(string|int|float $text): string
     {
         return htmlspecialchars((string) $text, ENT_QUOTES);
     }
 }
 
 if (! function_exists('esc_html__')) {
-    function esc_html__($text, $domain = 'default')
+    function esc_html__(string $text, string $domain = 'default'): string
     {
         return esc_html($text);
     }
