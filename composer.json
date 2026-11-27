@@ -29,7 +29,7 @@
         "laravel/pint": "^1.18",
         "pestphp/pest": "^3.8",
         "phpstan/phpstan": "^2.1",
-        "pollora/harness": "^0.1.40"
+        "pollora/harness": "^0.1.41"
     },
     "autoload": {
         "psr-4": {
